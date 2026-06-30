@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estado de Hilos de Rutas Interurbanas</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f0f2f5;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .header h1 {
+            font-size: 36px;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .header p {
+            font-size: 16px;
+            opacity: 0.95;
+        }
+
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .kpi-card {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            border-top: 4px solid #667eea;
+            transition: all 0.3s;
+        }
+
+        .kpi-card:hover {
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .kpi-label {
+            font-size: 12px;
+            color: #999;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .kpi-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .kpi-unit {
+            font-size: 12px;
+            color: #bbb;
+        }
+
+        /* Colores específicos para tarjetas */
+        .kpi-rutas { border-top-color: #667eea; }
+        .kpi-km { border-top-color: #764ba2; }
+        .kpi-disponibles { border-top-color: #48bb78; }
+        .kpi-recuperar { border-top-color: #f56565; }
+        .kpi-porcentaje { border-top-color: #eab308; }
+        .kpi-sobre50 { border-top-color: #48bb78; }
+        .kpi-bajo25 { border-top-color: #f56565; }
+
+        .section-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .rutas-criticas-container {
+            margin-bottom: 40px;
+        }
+
+        .rutas-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .ruta-card {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s;
+            border-left: 5px solid #f56565;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .ruta-card:hover {
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+            transform: translateY(-4px);
+        }
+
+        .ruta-card-header {
+            background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%);
+            color: white;
+            padding: 15px;
+        }
+
+        .ruta-nombre {
+            font-weight: 700;
+            font-size: 13px;
+            margin-bottom: 5px;
+            line-height: 1.4;
+            word-break: break-word;
+        }
+
+        .ruta-provincia {
+            font-size: 12px;
+            opacity: 0.9;
+        }
+
+        .disponibilidad-badge {
+            display: inline-block;
+            background: white;
+            color: #f56565;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 700;
+            margin-top: 8px;
+        }
+
+        .ruta-card-body {
+            padding: 20px;
+            display: none;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        .ruta-card:hover .ruta-card-body {
+            display: block;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .ruta-detail {
+            margin-bottom: 12px;
+            padding: 10px;
+            background: #f9f9f9;
+            border-radius: 6px;
+            border-left: 3px solid #667eea;
+        }
+
+        .ruta-detail-label {
+            font-size: 11px;
+            color: #999;
+            text-transform: uppercase;
+            font-weight: 600;
+            margin-bottom: 4px;
+            letter-spacing: 0.5px;
+        }
+
+        .ruta-detail-value {
+            font-size: 16px;
+            font-weight: 700;
+            color: #333;
+        }
+
+        .ruta-detail-value span {
+            font-size: 12px;
+            color: #666;
+            font-weight: normal;
+            margin-left: 5px;
+        }
+
+        .map-container {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            height: 700px;
+            margin-top: 40px;
+        }
+
+        #map {
+            width: 100%;
+            height: 100%;
+        }
+
+        .legend {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            margin-top: 30px;
+        }
+
+        .legend-title {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .legend-items {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .legend-color {
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+            flex-shrink: 0;
+        }
+
+        .legend-label {
+            font-size: 13px;
+            color: #666;
+        }
+
+        .info-box {
+            background: #e6f2ff;
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+
+        .info-box p {
+            font-size: 14px;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .hover-hint {
+            font-size: 11px;
+            color: #999;
+            font-style: italic;
+            margin-top: 5px;
+        }
+
+        @media (max-width: 768px) {
+            .kpi-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .rutas-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .header h1 {
+                font-size: 24px;
+            }
+
+            .ruta-nombre {
+                font-size: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>📡 Estado de Hilos de Rutas Interurbanas</h1>
+            <p>Dashboard integral de disponibilidad y estado de infraestructura de fibra óptica</p>
+        </div>
+
+        <!-- KPI Grid -->
+        <div class="kpi-grid">
+            <div class="kpi-card kpi-rutas">
+                <div class="kpi-label">Total de Rutas</div>
+                <div class="kpi-value">41</div>
+                <div class="kpi-unit">rutas monitoreadas</div>
+            </div>
+
+            <div class="kpi-card kpi-km">
+                <div class="kpi-label">Total de Kilómetros</div>
+                <div class="kpi-value">1,950</div>
+                <div class="kpi-unit">km de fibra</div>
+            </div>
+
+            <div class="kpi-card kpi-disponibles">
+                <div class="kpi-label">Hilos Disponibles</div>
+                <div class="kpi-value">751</div>
+                <div class="kpi-unit">hilos nodo-nodo</div>
+            </div>
+
+            <div class="kpi-card kpi-recuperar">
+                <div class="kpi-label">Hilos por Recuperar</div>
+                <div class="kpi-value">963</div>
+                <div class="kpi-unit">hilos caídos</div>
+            </div>
+
+            <div class="kpi-card kpi-porcentaje">
+                <div class="kpi-label">Disponibilidad General</div>
+                <div class="kpi-value">38.39%</div>
+                <div class="kpi-unit">del total de hilos</div>
+            </div>
+
+            <div class="kpi-card kpi-sobre50">
+                <div class="kpi-label">Rutas >50% Disponibilidad</div>
+                <div class="kpi-value">15</div>
+                <div class="kpi-unit">36% del total</div>
+            </div>
+
+            <div class="kpi-card kpi-bajo25">
+                <div class="kpi-label">Rutas <25% Disponibilidad</div>
+                <div class="kpi-value">11</div>
+                <div class="kpi-unit">27% del total</div>
+            </div>
+
+            <div class="kpi-card" style="border-top-color: #a78bfa;">
+                <div class="kpi-label">Total de Hilos</div>
+                <div class="kpi-value">1,956</div>
+                <div class="kpi-unit">capacidad total</div>
+            </div>
+        </div>
+
+        <!-- Info Box -->
+        <div class="info-box">
+            <p>
+                <strong>ℹ️ Nota:</strong> Las rutas con disponibilidad menor al 25% requieren atención inmediata. 
+                Posicione el cursor sobre cada ruta para ver detalles de hilos ocupados, disponibles (NODO-NODO) y por recuperar.
+            </p>
+        </div>
+
+        <!-- Rutas Críticas -->
+        <div class="rutas-criticas-container">
+            <h2 class="section-title">⚠️ Rutas con Disponibilidad < 25%</h2>
+            
+            <div class="rutas-grid" id="rutasGrid">
+                <!-- Las tarjetas se cargarán dinámicamente con JavaScript -->
+            </div>
+        </div>
+
+        <!-- Mapa -->
+        <h2 class="section-title">🗺️ Mapa de Rutas - Codificación por Disponibilidad</h2>
+        
+        <div class="legend">
+            <div class="legend-title">Leyenda de Colores</div>
+            <div class="legend-items">
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #2563eb;"></div>
+                    <div class="legend-label"><strong>Azul:</strong> Disponibilidad > 75%</div>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #16a34a;"></div>
+                    <div class="legend-label"><strong>Verde:</strong> 50% - 75%</div>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #eab308;"></div>
+                    <div class="legend-label"><strong>Amarillo:</strong> 25% - 50%</div>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #dc2626;"></div>
+                    <div class="legend-label"><strong>Rojo:</strong> < 25%</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="map-container">
+            <div id="map"></div>
+        </div>
+    </div>
+
+    <script>
+        // Datos completos de todas las rutas
+        const todasLasRutas = [
+            {"nombre": "ALA-Alausi SDH (O)/Zhud (O)-F01-BB", "provincia": "CAÑAR", "distancia": 46, "hilos_total": 48, "hilos_nodo": 39, "hilos_ocupados": 8, "hilos_recuperar": 1, "disponibilidad": 81.25, "coord_inicio": {"lat": -2.459628, "lng": -79.004278}, "coord_fin": {"lat": -2.347146, "lng": -78.934662}},
+            {"nombre": "CUE-Bellavista Cuenca (A)/ColonCañar (NE)-F01-BB", "provincia": "CUENCA", "distancia": 61, "hilos_total": 48, "hilos_nodo": 13, "hilos_ocupados": 13, "hilos_recuperar": 22, "disponibilidad": 27.08, "coord_inicio": {"lat": -2.88881554, "lng": -79.0126183}, "coord_fin": {"lat": -2.566028, "lng": -78.938088}},
+            {"nombre": "CUE-Bellavista Cuenca (A)/Colon Cañar (NE)-F02-BB", "provincia": "CUENCA", "distancia": 76, "hilos_total": 48, "hilos_nodo": 2, "hilos_ocupados": 13, "hilos_recuperar": 33, "disponibilidad": 4.17, "coord_inicio": {"lat": -2.88881554, "lng": -79.0126183}, "coord_fin": {"lat": -2.566028, "lng": -78.938088}},
+            {"nombre": "CUE-Bellavista Cuenca (A)/Giron (NE)-F01-BB", "provincia": "AZUAY", "distancia": 56, "hilos_total": 48, "hilos_nodo": 5, "hilos_ocupados": 12, "hilos_recuperar": 31, "disponibilidad": 10.42, "coord_inicio": {"lat": -2.88881554, "lng": -79.0126183}, "coord_fin": {"lat": -3.160695, "lng": -79.145868}},
+            {"nombre": "CUE-Bellavista Cuenca (A)/Gualaceo (E)-F01-BB", "provincia": "AZUAY", "distancia": 65, "hilos_total": 48, "hilos_nodo": 36, "hilos_ocupados": 0, "hilos_recuperar": 12, "disponibilidad": 75.0, "coord_inicio": {"lat": -2.88881554, "lng": -79.0126183}, "coord_fin": {"lat": -2.888778, "lng": -78.778145}},
+            {"nombre": "CUE-Bellavista Cuenca (A)/Pahuancay (O)-F01-BB", "provincia": "CUENCA", "distancia": 90, "hilos_total": 48, "hilos_nodo": 28, "hilos_ocupados": 7, "hilos_recuperar": 13, "disponibilidad": 58.33, "coord_inicio": {"lat": -2.88881554, "lng": -79.0126183}, "coord_fin": {"lat": -2.636242, "lng": -78.600918}},
+            {"nombre": "CUE-Bellavista Cuenca (A)/Oña (O)-F01-BB", "provincia": "AZUAY", "distancia": 113, "hilos_total": 48, "hilos_nodo": 4, "hilos_ocupados": 11, "hilos_recuperar": 33, "disponibilidad": 8.33, "coord_inicio": {"lat": -2.88881554, "lng": -79.0126183}, "coord_fin": {"lat": -3.470626, "lng": -79.154971}},
+            {"nombre": "CUE-Bellavista Cuenca (A)/Sigsig (E)-F01-BB", "provincia": "AZUAY", "distancia": 59, "hilos_total": 48, "hilos_nodo": 7, "hilos_ocupados": 14, "hilos_recuperar": 27, "disponibilidad": 14.58, "coord_inicio": {"lat": -2.88881554, "lng": -79.0126183}, "coord_fin": {"lat": -3.050488, "lng": -78.793128}},
+            {"nombre": "CUE-Bellavista Cuenca (A)/Molleturo (O)-F01-BB", "provincia": "AZUAY", "distancia": 67, "hilos_total": 48, "hilos_nodo": 36, "hilos_ocupados": 2, "hilos_recuperar": 10, "disponibilidad": 75.0, "coord_inicio": {"lat": -2.88881554, "lng": -79.0126183}, "coord_fin": {"lat": -2.765791, "lng": -79.396220}},
+            {"nombre": "CUE-Ñuñurco (NE)-Bellavista Cuenca(A)/Pahuancay (O)-F01-DB", "provincia": "CUENCA", "distancia": 42, "hilos_total": 48, "hilos_nodo": 18, "hilos_ocupados": 6, "hilos_recuperar": 24, "disponibilidad": 37.5, "coord_inicio": {"lat": -2.8887358, "lng": -78.779591}, "coord_fin": {"lat": -2.636242, "lng": -78.600918}},
+            {"nombre": "GLCO-Gualaceo (E)/Chordeleg (E)-F01-BB", "provincia": "AZUAY", "distancia": 42, "hilos_total": 48, "hilos_nodo": 41, "hilos_ocupados": 0, "hilos_recuperar": 7, "disponibilidad": 85.42, "coord_inicio": {"lat": -2.8887358, "lng": -78.779591}, "coord_fin": {"lat": -2.872266, "lng": -78.686267}},
+            {"nombre": "GLCO-Gualaceo (E)/Ñuñurco (NE)-F01-BB", "provincia": "AZUAY", "distancia": 35, "hilos_total": 48, "hilos_nodo": 48, "hilos_ocupados": 0, "hilos_recuperar": 0, "disponibilidad": 100.0, "coord_inicio": {"lat": -2.8887358, "lng": -78.779591}, "coord_fin": {"lat": -2.761497, "lng": -78.671846}},
+            {"nombre": "GLT-Gualleturo cue (E)/La Troncal 2 (O)-Zhud (O)-F01-BB", "provincia": "CAÑAR", "distancia": 58, "hilos_total": 48, "hilos_nodo": 0, "hilos_ocupados": 1, "hilos_recuperar": 47, "disponibilidad": 0.0, "coord_inicio": {"lat": -2.525743, "lng": -79.130602}, "coord_fin": {"lat": -2.459628, "lng": -79.004278}},
+            {"nombre": "NBON-Nabon (E)-Oña (O)/Bellavista Cuenca (A)-F01-D01-DB", "provincia": "AZUAY", "distancia": 80, "hilos_total": 48, "hilos_nodo": 10, "hilos_ocupados": 2, "hilos_recuperar": 36, "disponibilidad": 20.83, "coord_inicio": {"lat": -3.340539, "lng": -79.065932}, "coord_fin": {"lat": -3.470626, "lng": -79.154971}},
+            {"nombre": "CNR-La Troncal 2 (E)/Zhud (O)-F01-BB", "provincia": "CAÑAR", "distancia": 45, "hilos_total": 48, "hilos_nodo": 1, "hilos_ocupados": 7, "hilos_recuperar": 40, "disponibilidad": 2.08, "coord_inicio": {"lat": -2.430215, "lng": -79.337135}, "coord_fin": {"lat": -2.459628, "lng": -79.004278}},
+            {"nombre": "SISB-Santa Isabel (O)/ Pucara Santa Isabel (E)-F01-BB", "provincia": "AZUAY", "distancia": 50, "hilos_total": 48, "hilos_nodo": 10, "hilos_ocupados": 3, "hilos_recuperar": 35, "disponibilidad": 20.83, "coord_inicio": {"lat": -3.247479, "lng": -79.235797}, "coord_fin": {"lat": -3.223119, "lng": -79.470911}},
+            {"nombre": "CNR-Gualleturo cue (E)/La Troncal 2 (O)-Zhud (O)-F01-D01-DB", "provincia": "CAÑAR", "distancia": 52, "hilos_total": 48, "hilos_nodo": 11, "hilos_ocupados": 2, "hilos_recuperar": 35, "disponibilidad": 22.92, "coord_inicio": {"lat": -2.525743, "lng": -79.130602}, "coord_fin": {"lat": -2.459628, "lng": -79.004278}},
+            {"nombre": "GLCO-Gualaceo (E)-Limon Indanza (E)/San Juan Bosco (E)/F01-D01-DB", "provincia": "MORONA SANTIAGO", "distancia": 70, "hilos_total": 48, "hilos_nodo": 11, "hilos_ocupados": 0, "hilos_recuperar": 37, "disponibilidad": 22.92, "coord_inicio": {"lat": -2.8887358, "lng": -78.779591}, "coord_fin": {"lat": -3.048502, "lng": -78.005579}},
+            {"nombre": "AZG-Azogues (E)/Gualleturo cue (E)-F01-BB", "provincia": "CAÑAR", "distancia": 38, "hilos_total": 48, "hilos_nodo": 35, "hilos_ocupados": 2, "hilos_recuperar": 11, "disponibilidad": 72.92, "coord_inicio": {"lat": -2.739587, "lng": -78.845278}, "coord_fin": {"lat": -2.525743, "lng": -79.130602}},
+            {"nombre": "CNR-Javier Loyola(NE)- Bellavista Cuenca (A) / Colon Cañar (NE)-F01-D02-DB", "provincia": "CUENCA", "distancia": 48, "hilos_total": 48, "hilos_nodo": 2, "hilos_ocupados": 4, "hilos_recuperar": 42, "disponibilidad": 4.17, "coord_inicio": {"lat": -2.636242, "lng": -78.600918}, "coord_fin": {"lat": -2.88881554, "lng": -79.0126183}},
+            {"nombre": "GLCO-Gualaceo (E)/Bellavista Cuenca (A)-Pahuancay (O)-F01-BB", "provincia": "AZUAY", "distancia": 55, "hilos_total": 48, "hilos_nodo": 3, "hilos_ocupados": 1, "hilos_recuperar": 44, "disponibilidad": 6.25, "coord_inicio": {"lat": -2.8887358, "lng": -78.779591}, "coord_fin": {"lat": -2.88881554, "lng": -79.0126183}},
+            {"nombre": "MDZ-Mendez SDH (O)/Sucua (E)-F01-BB", "provincia": "MORONA SANTIAGO", "distancia": 65, "hilos_total": 48, "hilos_nodo": 28, "hilos_ocupados": 8, "hilos_recuperar": 12, "disponibilidad": 58.33, "coord_inicio": {"lat": -2.719794, "lng": -78.3201}, "coord_fin": {"lat": -2.293435, "lng": -78.196564}},
+            {"nombre": "MCS-Macas sdh (O)/Sucua (E)-F01-BB", "provincia": "MORONA SANTIAGO", "distancia": 75, "hilos_total": 48, "hilos_nodo": 39, "hilos_ocupados": 6, "hilos_recuperar": 3, "disponibilidad": 81.25, "coord_inicio": {"lat": -2.312062, "lng": -78.121505}, "coord_fin": {"lat": -2.293435, "lng": -78.196564}},
+            {"nombre": "SJB-San Juan Bosco (E)/Limon Indanza (NE)-F01-BB", "provincia": "MORONA SANTIAGO", "distancia": 70, "hilos_total": 48, "hilos_nodo": 44, "hilos_ocupados": 0, "hilos_recuperar": 4, "disponibilidad": 91.67, "coord_inicio": {"lat": -3.122202, "lng": -78.539931}, "coord_fin": {"lat": -2.971079, "lng": -78.431995}},
+            {"nombre": "SISB-San Fernando (E)- Santa Isabel (O)/ El Guabo(O)-F02-D01", "provincia": "AZUAY", "distancia": 75, "hilos_total": 48, "hilos_nodo": 19, "hilos_ocupados": 8, "hilos_recuperar": 21, "disponibilidad": 39.58, "coord_inicio": {"lat": -3.146454, "lng": -79.251621}, "coord_fin": {"lat": -3.275125, "lng": -79.313987}},
+            {"nombre": "CNR-Zhud (O)/Suscal (E)-F02-BB", "provincia": "CAÑAR", "distancia": 48, "hilos_total": 48, "hilos_nodo": 42, "hilos_ocupados": 2, "hilos_recuperar": 4, "disponibilidad": 87.50, "coord_inicio": {"lat": -2.459628, "lng": -79.004278}, "coord_fin": {"lat": -2.371111, "lng": -78.886667}},
+            {"nombre": "MCS-Sucua (E)/Logroño  (NE)-F01-BB", "provincia": "MORONA SANTIAGO", "distancia": 60, "hilos_total": 48, "hilos_nodo": 42, "hilos_ocupados": 6, "hilos_recuperar": 0, "disponibilidad": 87.50, "coord_inicio": {"lat": -2.293435, "lng": -78.196564}, "coord_fin": {"lat": -2.404286, "lng": -77.850704}},
+            {"nombre": "PAU-Villaflor (NE)/Paute(O)-F01-BB", "provincia": "AZUAY", "distancia": 35, "hilos_total": 24, "hilos_nodo": 0, "hilos_ocupados": 2, "hilos_recuperar": 10, "disponibilidad": 0.0, "coord_inicio": {"lat": -2.829142, "lng": -78.802993}, "coord_fin": {"lat": -2.776293, "lng": -78.7604}},
+            {"nombre": "GLCO-Gualaceo (E)-Limon Indanza (E)/Pahuancay (O)-F01-BB", "provincia": "MORONA SANTIAGO", "distancia": 65, "hilos_total": 48, "hilos_nodo": 32, "hilos_ocupados": 2, "hilos_recuperar": 14, "disponibilidad": 66.67, "coord_inicio": {"lat": -2.8887358, "lng": -78.779591}, "coord_fin": {"lat": -2.636242, "lng": -78.600918}},
+            {"nombre": "MCS-Santa Ana cue (E)/Macas sdh (O)-Chuwitayo (E)-F01-D01-DB", "provincia": "MORONA SANTIAGO", "distancia": 52, "hilos_total": 48, "hilos_nodo": 0, "hilos_ocupados": 0, "hilos_recuperar": 0, "disponibilidad": 0.0, "coord_inicio": {"lat": -2.303847, "lng": -78.100065}, "coord_fin": {"lat": -2.312062, "lng": -78.121505}},
+            {"nombre": "GLQ-Gualaquiza  (O)/Granadilla (O)-F01-BB", "provincia": "MORONA SANTIAGO", "distancia": 45, "hilos_total": 24, "hilos_nodo": 0, "hilos_ocupados": 14, "hilos_recuperar": 10, "disponibilidad": 0.0, "coord_inicio": {"lat": -3.404929, "lng": -78.577337}, "coord_fin": {"lat": -3.275125, "lng": -79.313987}},
+            {"nombre": "LIM-B-Limon Indanza (E)/Gualaquiza (O)-F01-BB", "provincia": "MORONA SANTIAGO", "distancia": 70, "hilos_total": 48, "hilos_nodo": 0, "hilos_ocupados": 0, "hilos_recuperar": 48, "disponibilidad": 0.0, "coord_inicio": {"lat": -2.971079, "lng": -78.431995}, "coord_fin": {"lat": -3.404929, "lng": -78.577337}},
+            {"nombre": "MDZ-Tiwintza (E)/Mendez SDH (O)-F01-BB", "provincia": "MORONA SANTIAGO", "distancia": 85, "hilos_total": 48, "hilos_nodo": 0, "hilos_ocupados": 4, "hilos_recuperar": 44, "disponibilidad": 0.0, "coord_inicio": {"lat": -3.048502, "lng": -78.005579}, "coord_fin": {"lat": -2.719794, "lng": -78.3201}},
+            {"nombre": "MCS-Logroño (E)/Santa Ana cue (E)-F01-BB", "provincia": "MORONA SANTIAGO", "distancia": 60, "hilos_total": 48, "hilos_nodo": 0, "hilos_ocupados": 1, "hilos_recuperar": 47, "disponibilidad": 0.0, "coord_inicio": {"lat": -2.404286, "lng": -77.850704}, "coord_fin": {"lat": -2.303847, "lng": -78.100065}},
+            {"nombre": "AZG-Azogues (E)/Gualleturo cue (E)-F02-BB", "provincia": "CAÑAR", "distancia": 42, "hilos_total": 24, "hilos_nodo": 15, "hilos_ocupados": 2, "hilos_recuperar": 7, "disponibilidad": 62.5, "coord_inicio": {"lat": -2.739587, "lng": -78.845278}, "coord_fin": {"lat": -2.525743, "lng": -79.130602}},
+            {"nombre": "SIG-Sigsig (E)/Granadilla (O)-F01-BB", "provincia": "AZUAY", "distancia": 48, "hilos_total": 24, "hilos_nodo": 0, "hilos_ocupados": 13, "hilos_recuperar": 11, "disponibilidad": 0.0, "coord_inicio": {"lat": -3.050488, "lng": -78.793128}, "coord_fin": {"lat": -3.275125, "lng": -79.313987}},
+            {"nombre": "CNR-Javier Loyola(NE)- Bellavista Cuenca (A) / Colon Cañar (NE)-F01-BB", "provincia": "CUENCA", "distancia": 55, "hilos_total": 48, "hilos_nodo": 28, "hilos_ocupados": 10, "hilos_recuperar": 10, "disponibilidad": 58.33, "coord_inicio": {"lat": -2.636242, "lng": -78.600918}, "coord_fin": {"lat": -2.88881554, "lng": -79.0126183}},
+            {"nombre": "MCS-Taisha (E)-Macas sdh (O)/Chuwitayo(E)-F01-BB", "provincia": "MORONA SANTIAGO", "distancia": 80, "hilos_total": 48, "hilos_nodo": 0, "hilos_ocupados": 0, "hilos_recuperar": 0, "disponibilidad": 0.0, "coord_inicio": {"lat": -2.383611, "lng": -77.508889}, "coord_fin": {"lat": -2.312062, "lng": -78.121505}},
+            {"nombre": "MDZ-Mendez SDH (O)/Pahuancay (O)-F01-BB", "provincia": "MORONA SANTIAGO", "distancia": 90, "hilos_total": 48, "hilos_nodo": 0, "hilos_ocupados": 0, "hilos_recuperar": 0, "disponibilidad": 0.0, "coord_inicio": {"lat": -2.719794, "lng": -78.3201}, "coord_fin": {"lat": -2.636242, "lng": -78.600918}},
+            {"nombre": "MCS-Santa Ana cue (E )/Chuwitayo (E)-Macas sdh (O)-F02-BB", "provincia": "MORONA SANTIAGO", "distancia": 55, "hilos_total": 48, "hilos_nodo": 0, "hilos_ocupados": 0, "hilos_recuperar": 0, "disponibilidad": 0.0, "coord_inicio": {"lat": -2.303847, "lng": -78.100065}, "coord_fin": {"lat": -2.312062, "lng": -78.121505}},
+            {"nombre": "MCS-Macas sdh (O)/Chuwitayo(E)-F01-Bb", "provincia": "MORONA SANTIAGO", "distancia": 45, "hilos_total": 48, "hilos_nodo": 0, "hilos_ocupados": 0, "hilos_recuperar": 0, "disponibilidad": 0.0, "coord_inicio": {"lat": -2.312062, "lng": -78.121505}, "coord_fin": {"lat": -2.303847, "lng": -78.100065}},
+            {"nombre": "SISB-Pucara (E)- Santa Isabel (O)/ El Guabo(O)-F02-D02-DB", "provincia": "AZUAY", "distancia": 60, "hilos_total": 48, "hilos_nodo": 0, "hilos_ocupados": 0, "hilos_recuperar": 0, "disponibilidad": 0.0, "coord_inicio": {"lat": -3.223119, "lng": -79.470911}, "coord_fin": {"lat": -3.275125, "lng": -79.313987}},
+            {"nombre": "GLCO-Gualaceo (E)-Limon Indanza (E)/San Juan Bosco (E)/F01-D01-DB", "provincia": "MORONA SANTIAGO", "distancia": 75, "hilos_total": 48, "hilos_nodo": 11, "hilos_ocupados": 0, "hilos_recuperar": 37, "disponibilidad": 22.92, "coord_inicio": {"lat": -2.8887358, "lng": -78.779591}, "coord_fin": {"lat": -3.048502, "lng": -78.005579}},
+        ];
+
+        // Función para obtener color según disponibilidad
+        function getColor(disponibilidad) {
+            if (disponibilidad > 75) return '#2563eb';      // Azul
+            if (disponibilidad > 50) return '#16a34a';      // Verde
+            if (disponibilidad > 25) return '#eab308';      // Amarillo
+            return '#dc2626';                                // Rojo
+        }
+
+        // Cargar tarjetas de rutas críticas
+        function cargarRutasCriticas() {
+            const rutasCriticas = todasLasRutas.filter(r => r.disponibilidad < 25).sort((a, b) => a.disponibilidad - b.disponibilidad);
+            const grid = document.getElementById('rutasGrid');
+            
+            rutasCriticas.forEach(ruta => {
+                const card = document.createElement('div');
+                card.className = 'ruta-card';
+                card.innerHTML = `
+                    <div class="ruta-card-header">
+                        <div class="ruta-nombre">${ruta.disponibilidad === 0 ? '🚨' : '⚠️'} ${ruta.nombre}</div>
+                        <div class="ruta-provincia">${ruta.provincia}</div>
+                        <div class="disponibilidad-badge">${ruta.disponibilidad.toFixed(2)}%</div>
+                    </div>
+                    <div class="ruta-card-body">
+                        <div class="ruta-detail">
+                            <div class="ruta-detail-label">Hilos Ocupados</div>
+                            <div class="ruta-detail-value">${ruta.hilos_ocupados}</div>
+                        </div>
+                        <div class="ruta-detail">
+                            <div class="ruta-detail-label">Hilos Nodo-Nodo</div>
+                            <div class="ruta-detail-value">${ruta.hilos_nodo} <span>/${ruta.hilos_total}</span></div>
+                        </div>
+                        <div class="ruta-detail">
+                            <div class="ruta-detail-label">Hilos por Recuperar</div>
+                            <div class="ruta-detail-value">${ruta.hilos_recuperar}</div>
+                        </div>
+                    </div>
+                    <div class="hover-hint">👆 Pasa el cursor para ver detalles</div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        // Inicializar mapa con TODAS las rutas
+        function initMap() {
+            const map = L.map('map').setView([-2.9, -78.6], 8);
+            
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors',
+                maxZoom: 19
+            }).addTo(map);
+
+            // Dibujar todas las rutas
+            todasLasRutas.forEach(ruta => {
+                if (ruta.coord_inicio && ruta.coord_fin) {
+                    const latlngs = [
+                        [ruta.coord_inicio.lat, ruta.coord_inicio.lng],
+                        [ruta.coord_fin.lat, ruta.coord_fin.lng]
+                    ];
+                    
+                    const color = getColor(ruta.disponibilidad);
+                    
+                    const polyline = L.polyline(latlngs, {
+                        color: color,
+                        weight: 3,
+                        opacity: 0.8,
+                        dashArray: ruta.disponibilidad < 25 ? '5, 5' : null
+                    }).bindPopup(`
+                        <strong>${ruta.nombre}</strong><br/>
+                        Provincia: ${ruta.provincia}<br/>
+                        Disponibilidad: <strong>${ruta.disponibilidad.toFixed(2)}%</strong><br/>
+                        Hilos: ${ruta.hilos_nodo}/${ruta.hilos_total}<br/>
+                        Distancia: ${ruta.distancia} km
+                    `).addTo(map);
+                }
+            });
+        }
+
+        // Inicializar cuando carga la página
+        document.addEventListener('DOMContentLoaded', () => {
+            cargarRutasCriticas();
+            setTimeout(initMap, 100);
+        });
+    </script>
+</body>
+</html>
