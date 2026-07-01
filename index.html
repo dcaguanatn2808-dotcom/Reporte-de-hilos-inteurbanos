@@ -213,6 +213,115 @@
             margin-left: 5px;
         }
 
+        .plan-accion-container {
+            margin-bottom: 40px;
+        }
+
+        .plan-timeline {
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+
+        .quincena-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            border-left: 5px solid #667eea;
+        }
+
+        .quincena-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 14px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .quincena-titulo {
+            font-size: 16px;
+            font-weight: 700;
+        }
+
+        .quincena-fechas {
+            font-size: 13px;
+            opacity: 0.95;
+            background: rgba(255,255,255,0.15);
+            padding: 4px 12px;
+            border-radius: 20px;
+        }
+
+        .quincena-rutas {
+            padding: 10px 0;
+        }
+
+        .plan-ruta-item {
+            display: grid;
+            grid-template-columns: 36px 1fr auto auto auto;
+            align-items: center;
+            gap: 14px;
+            padding: 10px 20px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .plan-ruta-item:last-child {
+            border-bottom: none;
+        }
+
+        .plan-orden {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: #667eea;
+            color: white;
+            font-size: 12px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .plan-ruta-nombre {
+            font-size: 13px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .plan-ruta-provincia {
+            font-size: 11px;
+            color: #999;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+
+        .plan-ruta-disp {
+            font-size: 12px;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: 20px;
+            white-space: nowrap;
+            color: white;
+        }
+
+        .plan-ruta-hilos {
+            font-size: 12px;
+            color: #666;
+            white-space: nowrap;
+        }
+
+        @media (max-width: 768px) {
+            .plan-ruta-item {
+                grid-template-columns: 28px 1fr;
+            }
+            .plan-ruta-provincia, .plan-ruta-hilos {
+                display: none;
+            }
+        }
+
         .map-container {
             background: white;
             border-radius: 12px;
@@ -318,49 +427,49 @@
         <div class="kpi-grid">
             <div class="kpi-card kpi-rutas">
                 <div class="kpi-label">Total de Rutas</div>
-                <div class="kpi-value">41</div>
+                <div class="kpi-value">53</div>
                 <div class="kpi-unit">rutas monitoreadas</div>
             </div>
 
             <div class="kpi-card kpi-km">
                 <div class="kpi-label">Total de Kilómetros</div>
-                <div class="kpi-value">1,950</div>
+                <div class="kpi-value">2,010</div>
                 <div class="kpi-unit">km de fibra</div>
             </div>
 
             <div class="kpi-card kpi-disponibles">
                 <div class="kpi-label">Hilos Disponibles</div>
-                <div class="kpi-value">751</div>
+                <div class="kpi-value">1,071</div>
                 <div class="kpi-unit">hilos nodo-nodo</div>
             </div>
 
             <div class="kpi-card kpi-recuperar">
                 <div class="kpi-label">Hilos por Recuperar</div>
-                <div class="kpi-value">963</div>
+                <div class="kpi-value">879</div>
                 <div class="kpi-unit">hilos caídos</div>
             </div>
 
             <div class="kpi-card kpi-porcentaje">
                 <div class="kpi-label">Disponibilidad General</div>
-                <div class="kpi-value">38.39%</div>
+                <div class="kpi-value">52.86%</div>
                 <div class="kpi-unit">del total de hilos</div>
             </div>
 
             <div class="kpi-card kpi-sobre50">
                 <div class="kpi-label">Rutas >50% Disponibilidad</div>
-                <div class="kpi-value">15</div>
-                <div class="kpi-unit">36% del total</div>
+                <div class="kpi-value">20</div>
+                <div class="kpi-unit">38% del total</div>
             </div>
 
             <div class="kpi-card kpi-bajo25">
                 <div class="kpi-label">Rutas <25% Disponibilidad</div>
-                <div class="kpi-value">11</div>
-                <div class="kpi-unit">27% del total</div>
+                <div class="kpi-value">14</div>
+                <div class="kpi-unit">26% del total</div>
             </div>
 
             <div class="kpi-card" style="border-top-color: #a78bfa;">
                 <div class="kpi-label">Total de Hilos</div>
-                <div class="kpi-value">1,956</div>
+                <div class="kpi-value">2,026</div>
                 <div class="kpi-unit">capacidad total</div>
             </div>
         </div>
@@ -368,14 +477,14 @@
         <!-- Info Box -->
         <div class="info-box">
             <p>
-                <strong>ℹ️ Nota:</strong> Las rutas con disponibilidad menor al 25% requieren atención inmediata. 
+                <strong>ℹ️ Nota:</strong> Las rutas con disponibilidad menor al 20% requieren atención inmediata. 
                 Posicione el cursor sobre cada ruta para ver detalles de hilos ocupados, disponibles (NODO-NODO) y por recuperar.
             </p>
         </div>
 
         <!-- Rutas Críticas -->
         <div class="rutas-criticas-container">
-            <h2 class="section-title">⚠️ Rutas con Disponibilidad < 25%</h2>
+            <h2 class="section-title">⚠️ Rutas con Disponibilidad < 20%</h2>
             
             <div class="rutas-grid" id="rutasGrid">
                 <!-- Las tarjetas se cargarán dinámicamente con JavaScript -->
@@ -383,6 +492,126 @@
         </div>
 
         <!-- Mapa -->
+        <!-- Plan de Acción -->
+        <div class="plan-accion-container">
+            <h2 class="section-title">🛠️ Plan de Acción - Recuperación de Hilos (3 Meses)</h2>
+
+            <div class="info-box">
+                <p>
+                    <strong>ℹ️ Objetivo:</strong> Recuperar los hilos caídos en las rutas más críticas mediante trabajos de bajo impacto,
+                    ejecutando <strong>una intervención cada 15 días</strong> a lo largo de un plazo de <strong>3 meses</strong>.
+                    El plan abarca únicamente las rutas con <strong>disponibilidad menor al 10%</strong>, ordenadas de mayor a menor
+                    criticidad, cubriendo un total de <strong>7 rutas</strong> a lo largo de 6 quincenas.
+                </p>
+            </div>
+
+            <div class="plan-timeline">
+                <div class="quincena-card">
+                    <div class="quincena-header">
+                        <div class="quincena-titulo">📅 Quincena 1 de 6</div>
+                        <div class="quincena-fechas">1 Jul 2026 — 15 Jul 2026</div>
+                    </div>
+                    <div class="quincena-rutas">
+                        <div class="plan-ruta-item">
+                            <div class="plan-orden">1</div>
+                            <div class="plan-ruta-nombre">SIG-Sigsig (E)/Granadilla (O)-F01-BB</div>
+                            <div class="plan-ruta-provincia">AZUAY</div>
+                            <div class="plan-ruta-disp" style="background: #dc2626;">0.00%</div>
+                            <div class="plan-ruta-hilos">11 hilos x recuperar</div>
+                        </div>
+                        <div class="plan-ruta-item">
+                            <div class="plan-orden">2</div>
+                            <div class="plan-ruta-nombre">GLQ-Gualaquiza  (O)/Granadilla (O)-F01-BB</div>
+                            <div class="plan-ruta-provincia">MORONA SANTIAGO</div>
+                            <div class="plan-ruta-disp" style="background: #dc2626;">0.00%</div>
+                            <div class="plan-ruta-hilos">10 hilos x recuperar</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="quincena-card">
+                    <div class="quincena-header">
+                        <div class="quincena-titulo">📅 Quincena 2 de 6</div>
+                        <div class="quincena-fechas">16 Jul 2026 — 30 Jul 2026</div>
+                    </div>
+                    <div class="quincena-rutas">
+                        <div class="plan-ruta-item">
+                            <div class="plan-orden">3</div>
+                            <div class="plan-ruta-nombre">CNR-La Troncal 2 (E)/Zhud (O)-F01-BB</div>
+                            <div class="plan-ruta-provincia">CAÑAR</div>
+                            <div class="plan-ruta-disp" style="background: #dc2626;">2.08%</div>
+                            <div class="plan-ruta-hilos">40 hilos x recuperar</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="quincena-card">
+                    <div class="quincena-header">
+                        <div class="quincena-titulo">📅 Quincena 3 de 6</div>
+                        <div class="quincena-fechas">31 Jul 2026 — 14 Ago 2026</div>
+                    </div>
+                    <div class="quincena-rutas">
+                        <div class="plan-ruta-item">
+                            <div class="plan-orden">4</div>
+                            <div class="plan-ruta-nombre">CNR-Javier Loyola(NE)- Bellavista Cuenca (A) / Colon Cañar (NE)-F01-D02-DB</div>
+                            <div class="plan-ruta-provincia">CAÑAR</div>
+                            <div class="plan-ruta-disp" style="background: #dc2626;">4.17%</div>
+                            <div class="plan-ruta-hilos">42 hilos x recuperar</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="quincena-card">
+                    <div class="quincena-header">
+                        <div class="quincena-titulo">📅 Quincena 4 de 6</div>
+                        <div class="quincena-fechas">15 Ago 2026 — 29 Ago 2026</div>
+                    </div>
+                    <div class="quincena-rutas">
+                        <div class="plan-ruta-item">
+                            <div class="plan-orden">5</div>
+                            <div class="plan-ruta-nombre">CUE-Bellavista Cuenca (A)/Colon Cañar (NE)-F02-BB</div>
+                            <div class="plan-ruta-provincia">CUENCA</div>
+                            <div class="plan-ruta-disp" style="background: #dc2626;">4.17%</div>
+                            <div class="plan-ruta-hilos">33 hilos x recuperar</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="quincena-card">
+                    <div class="quincena-header">
+                        <div class="quincena-titulo">📅 Quincena 5 de 6</div>
+                        <div class="quincena-fechas">30 Ago 2026 — 13 Sep 2026</div>
+                    </div>
+                    <div class="quincena-rutas">
+                        <div class="plan-ruta-item">
+                            <div class="plan-orden">6</div>
+                            <div class="plan-ruta-nombre">GLCO-Gualaceo (E)/Bellavista Cuenca (A)-Pahuancay (O)-F01-BB</div>
+                            <div class="plan-ruta-provincia">AZUAY</div>
+                            <div class="plan-ruta-disp" style="background: #dc2626;">6.25%</div>
+                            <div class="plan-ruta-hilos">44 hilos x recuperar</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="quincena-card">
+                    <div class="quincena-header">
+                        <div class="quincena-titulo">📅 Quincena 6 de 6</div>
+                        <div class="quincena-fechas">14 Sep 2026 — 28 Sep 2026</div>
+                    </div>
+                    <div class="quincena-rutas">
+                        <div class="plan-ruta-item">
+                            <div class="plan-orden">7</div>
+                            <div class="plan-ruta-nombre">CUE-Bellavista Cuenca (A)/Oña (O)-F01-BB</div>
+                            <div class="plan-ruta-provincia">CUENCA</div>
+                            <div class="plan-ruta-disp" style="background: #dc2626;">8.33%</div>
+                            <div class="plan-ruta-hilos">33 hilos x recuperar</div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
         <h2 class="section-title">🗺️ Mapa de Rutas - Codificación por Disponibilidad</h2>
         
         <div class="legend">
@@ -418,46 +647,56 @@
             {"nombre": "ALA-Alausi SDH (O)/Zhud (O)-F01-BB", "provincia": "CAÑAR", "distancia": 46, "hilos_total": 48, "hilos_nodo": 39, "hilos_ocupados": 8, "hilos_recuperar": 1, "disponibilidad": 81.25, "coord_inicio": {"lat": -2.459628, "lng": -79.004278}, "coord_fin": {"lat": -2.347146, "lng": -78.934662}},
             {"nombre": "CUE-Bellavista Cuenca (A)/ColonCañar (NE)-F01-BB", "provincia": "CUENCA", "distancia": 61, "hilos_total": 48, "hilos_nodo": 13, "hilos_ocupados": 13, "hilos_recuperar": 22, "disponibilidad": 27.08, "coord_inicio": {"lat": -2.88881554, "lng": -79.0126183}, "coord_fin": {"lat": -2.566028, "lng": -78.938088}},
             {"nombre": "CUE-Bellavista Cuenca (A)/Colon Cañar (NE)-F02-BB", "provincia": "CUENCA", "distancia": 76, "hilos_total": 48, "hilos_nodo": 2, "hilos_ocupados": 13, "hilos_recuperar": 33, "disponibilidad": 4.17, "coord_inicio": {"lat": -2.88881554, "lng": -79.0126183}, "coord_fin": {"lat": -2.566028, "lng": -78.938088}},
-            {"nombre": "CUE-Bellavista Cuenca (A)/Giron (NE)-F01-BB", "provincia": "AZUAY", "distancia": 56, "hilos_total": 48, "hilos_nodo": 5, "hilos_ocupados": 12, "hilos_recuperar": 31, "disponibilidad": 10.42, "coord_inicio": {"lat": -2.88881554, "lng": -79.0126183}, "coord_fin": {"lat": -3.160695, "lng": -79.145868}},
-            {"nombre": "CUE-Bellavista Cuenca (A)/Gualaceo (E)-F01-BB", "provincia": "AZUAY", "distancia": 65, "hilos_total": 48, "hilos_nodo": 36, "hilos_ocupados": 0, "hilos_recuperar": 12, "disponibilidad": 75.0, "coord_inicio": {"lat": -2.88881554, "lng": -79.0126183}, "coord_fin": {"lat": -2.888778, "lng": -78.778145}},
-            {"nombre": "CUE-Bellavista Cuenca (A)/Pahuancay (O)-F01-BB", "provincia": "CUENCA", "distancia": 90, "hilos_total": 48, "hilos_nodo": 28, "hilos_ocupados": 7, "hilos_recuperar": 13, "disponibilidad": 58.33, "coord_inicio": {"lat": -2.88881554, "lng": -79.0126183}, "coord_fin": {"lat": -2.636242, "lng": -78.600918}},
-            {"nombre": "CUE-Bellavista Cuenca (A)/Oña (O)-F01-BB", "provincia": "AZUAY", "distancia": 113, "hilos_total": 48, "hilos_nodo": 4, "hilos_ocupados": 11, "hilos_recuperar": 33, "disponibilidad": 8.33, "coord_inicio": {"lat": -2.88881554, "lng": -79.0126183}, "coord_fin": {"lat": -3.470626, "lng": -79.154971}},
-            {"nombre": "CUE-Bellavista Cuenca (A)/Sigsig (E)-F01-BB", "provincia": "AZUAY", "distancia": 59, "hilos_total": 48, "hilos_nodo": 7, "hilos_ocupados": 14, "hilos_recuperar": 27, "disponibilidad": 14.58, "coord_inicio": {"lat": -2.88881554, "lng": -79.0126183}, "coord_fin": {"lat": -3.050488, "lng": -78.793128}},
-            {"nombre": "CUE-Bellavista Cuenca (A)/Molleturo (O)-F01-BB", "provincia": "AZUAY", "distancia": 67, "hilos_total": 48, "hilos_nodo": 36, "hilos_ocupados": 2, "hilos_recuperar": 10, "disponibilidad": 75.0, "coord_inicio": {"lat": -2.88881554, "lng": -79.0126183}, "coord_fin": {"lat": -2.765791, "lng": -79.396220}},
-            {"nombre": "CUE-Ñuñurco (NE)-Bellavista Cuenca(A)/Pahuancay (O)-F01-DB", "provincia": "CUENCA", "distancia": 42, "hilos_total": 48, "hilos_nodo": 18, "hilos_ocupados": 6, "hilos_recuperar": 24, "disponibilidad": 37.5, "coord_inicio": {"lat": -2.8887358, "lng": -78.779591}, "coord_fin": {"lat": -2.636242, "lng": -78.600918}},
-            {"nombre": "GLCO-Gualaceo (E)/Chordeleg (E)-F01-BB", "provincia": "AZUAY", "distancia": 42, "hilos_total": 48, "hilos_nodo": 41, "hilos_ocupados": 0, "hilos_recuperar": 7, "disponibilidad": 85.42, "coord_inicio": {"lat": -2.8887358, "lng": -78.779591}, "coord_fin": {"lat": -2.872266, "lng": -78.686267}},
-            {"nombre": "GLCO-Gualaceo (E)/Ñuñurco (NE)-F01-BB", "provincia": "AZUAY", "distancia": 35, "hilos_total": 48, "hilos_nodo": 48, "hilos_ocupados": 0, "hilos_recuperar": 0, "disponibilidad": 100.0, "coord_inicio": {"lat": -2.8887358, "lng": -78.779591}, "coord_fin": {"lat": -2.761497, "lng": -78.671846}},
-            {"nombre": "GLT-Gualleturo cue (E)/La Troncal 2 (O)-Zhud (O)-F01-BB", "provincia": "CAÑAR", "distancia": 58, "hilos_total": 48, "hilos_nodo": 0, "hilos_ocupados": 1, "hilos_recuperar": 47, "disponibilidad": 0.0, "coord_inicio": {"lat": -2.525743, "lng": -79.130602}, "coord_fin": {"lat": -2.459628, "lng": -79.004278}},
-            {"nombre": "NBON-Nabon (E)-Oña (O)/Bellavista Cuenca (A)-F01-D01-DB", "provincia": "AZUAY", "distancia": 80, "hilos_total": 48, "hilos_nodo": 10, "hilos_ocupados": 2, "hilos_recuperar": 36, "disponibilidad": 20.83, "coord_inicio": {"lat": -3.340539, "lng": -79.065932}, "coord_fin": {"lat": -3.470626, "lng": -79.154971}},
-            {"nombre": "CNR-La Troncal 2 (E)/Zhud (O)-F01-BB", "provincia": "CAÑAR", "distancia": 45, "hilos_total": 48, "hilos_nodo": 1, "hilos_ocupados": 7, "hilos_recuperar": 40, "disponibilidad": 2.08, "coord_inicio": {"lat": -2.430215, "lng": -79.337135}, "coord_fin": {"lat": -2.459628, "lng": -79.004278}},
-            {"nombre": "SISB-Santa Isabel (O)/ Pucara Santa Isabel (E)-F01-BB", "provincia": "AZUAY", "distancia": 50, "hilos_total": 48, "hilos_nodo": 10, "hilos_ocupados": 3, "hilos_recuperar": 35, "disponibilidad": 20.83, "coord_inicio": {"lat": -3.247479, "lng": -79.235797}, "coord_fin": {"lat": -3.223119, "lng": -79.470911}},
-            {"nombre": "CNR-Gualleturo cue (E)/La Troncal 2 (O)-Zhud (O)-F01-D01-DB", "provincia": "CAÑAR", "distancia": 52, "hilos_total": 48, "hilos_nodo": 11, "hilos_ocupados": 2, "hilos_recuperar": 35, "disponibilidad": 22.92, "coord_inicio": {"lat": -2.525743, "lng": -79.130602}, "coord_fin": {"lat": -2.459628, "lng": -79.004278}},
-            {"nombre": "GLCO-Gualaceo (E)-Limon Indanza (E)/San Juan Bosco (E)/F01-D01-DB", "provincia": "MORONA SANTIAGO", "distancia": 70, "hilos_total": 48, "hilos_nodo": 11, "hilos_ocupados": 0, "hilos_recuperar": 37, "disponibilidad": 22.92, "coord_inicio": {"lat": -2.8887358, "lng": -78.779591}, "coord_fin": {"lat": -3.048502, "lng": -78.005579}},
-            {"nombre": "AZG-Azogues (E)/Gualleturo cue (E)-F01-BB", "provincia": "CAÑAR", "distancia": 38, "hilos_total": 48, "hilos_nodo": 35, "hilos_ocupados": 2, "hilos_recuperar": 11, "disponibilidad": 72.92, "coord_inicio": {"lat": -2.739587, "lng": -78.845278}, "coord_fin": {"lat": -2.525743, "lng": -79.130602}},
-            {"nombre": "CNR-Javier Loyola(NE)- Bellavista Cuenca (A) / Colon Cañar (NE)-F01-D02-DB", "provincia": "CUENCA", "distancia": 48, "hilos_total": 48, "hilos_nodo": 2, "hilos_ocupados": 4, "hilos_recuperar": 42, "disponibilidad": 4.17, "coord_inicio": {"lat": -2.636242, "lng": -78.600918}, "coord_fin": {"lat": -2.88881554, "lng": -79.0126183}},
-            {"nombre": "GLCO-Gualaceo (E)/Bellavista Cuenca (A)-Pahuancay (O)-F01-BB", "provincia": "AZUAY", "distancia": 55, "hilos_total": 48, "hilos_nodo": 3, "hilos_ocupados": 1, "hilos_recuperar": 44, "disponibilidad": 6.25, "coord_inicio": {"lat": -2.8887358, "lng": -78.779591}, "coord_fin": {"lat": -2.88881554, "lng": -79.0126183}},
-            {"nombre": "MDZ-Mendez SDH (O)/Sucua (E)-F01-BB", "provincia": "MORONA SANTIAGO", "distancia": 65, "hilos_total": 48, "hilos_nodo": 28, "hilos_ocupados": 8, "hilos_recuperar": 12, "disponibilidad": 58.33, "coord_inicio": {"lat": -2.719794, "lng": -78.3201}, "coord_fin": {"lat": -2.293435, "lng": -78.196564}},
-            {"nombre": "MCS-Macas sdh (O)/Sucua (E)-F01-BB", "provincia": "MORONA SANTIAGO", "distancia": 75, "hilos_total": 48, "hilos_nodo": 39, "hilos_ocupados": 6, "hilos_recuperar": 3, "disponibilidad": 81.25, "coord_inicio": {"lat": -2.312062, "lng": -78.121505}, "coord_fin": {"lat": -2.293435, "lng": -78.196564}},
-            {"nombre": "SJB-San Juan Bosco (E)/Limon Indanza (NE)-F01-BB", "provincia": "MORONA SANTIAGO", "distancia": 70, "hilos_total": 48, "hilos_nodo": 44, "hilos_ocupados": 0, "hilos_recuperar": 4, "disponibilidad": 91.67, "coord_inicio": {"lat": -3.122202, "lng": -78.539931}, "coord_fin": {"lat": -2.971079, "lng": -78.431995}},
-            {"nombre": "SISB-San Fernando (E)- Santa Isabel (O)/ El Guabo(O)-F02-D01", "provincia": "AZUAY", "distancia": 75, "hilos_total": 48, "hilos_nodo": 19, "hilos_ocupados": 8, "hilos_recuperar": 21, "disponibilidad": 39.58, "coord_inicio": {"lat": -3.146454, "lng": -79.251621}, "coord_fin": {"lat": -3.275125, "lng": -79.313987}},
-            {"nombre": "CNR-Zhud (O)/Suscal (E)-F02-BB", "provincia": "CAÑAR", "distancia": 48, "hilos_total": 48, "hilos_nodo": 42, "hilos_ocupados": 2, "hilos_recuperar": 4, "disponibilidad": 87.50, "coord_inicio": {"lat": -2.459628, "lng": -79.004278}, "coord_fin": {"lat": -2.371111, "lng": -78.886667}},
-            {"nombre": "MCS-Sucua (E)/Logroño  (NE)-F01-BB", "provincia": "MORONA SANTIAGO", "distancia": 60, "hilos_total": 48, "hilos_nodo": 42, "hilos_ocupados": 6, "hilos_recuperar": 0, "disponibilidad": 87.50, "coord_inicio": {"lat": -2.293435, "lng": -78.196564}, "coord_fin": {"lat": -2.404286, "lng": -77.850704}},
-            {"nombre": "PAU-Villaflor (NE)/Paute(O)-F01-BB", "provincia": "AZUAY", "distancia": 35, "hilos_total": 24, "hilos_nodo": 0, "hilos_ocupados": 2, "hilos_recuperar": 10, "disponibilidad": 0.0, "coord_inicio": {"lat": -2.829142, "lng": -78.802993}, "coord_fin": {"lat": -2.776293, "lng": -78.7604}},
-            {"nombre": "GLCO-Gualaceo (E)-Limon Indanza (E)/Pahuancay (O)-F01-BB", "provincia": "MORONA SANTIAGO", "distancia": 65, "hilos_total": 48, "hilos_nodo": 32, "hilos_ocupados": 2, "hilos_recuperar": 14, "disponibilidad": 66.67, "coord_inicio": {"lat": -2.8887358, "lng": -78.779591}, "coord_fin": {"lat": -2.636242, "lng": -78.600918}},
-            {"nombre": "MCS-Santa Ana cue (E)/Macas sdh (O)-Chuwitayo (E)-F01-D01-DB", "provincia": "MORONA SANTIAGO", "distancia": 52, "hilos_total": 48, "hilos_nodo": 0, "hilos_ocupados": 0, "hilos_recuperar": 0, "disponibilidad": 0.0, "coord_inicio": {"lat": -2.303847, "lng": -78.100065}, "coord_fin": {"lat": -2.312062, "lng": -78.121505}},
-            {"nombre": "GLQ-Gualaquiza  (O)/Granadilla (O)-F01-BB", "provincia": "MORONA SANTIAGO", "distancia": 45, "hilos_total": 24, "hilos_nodo": 0, "hilos_ocupados": 14, "hilos_recuperar": 10, "disponibilidad": 0.0, "coord_inicio": {"lat": -3.404929, "lng": -78.577337}, "coord_fin": {"lat": -3.275125, "lng": -79.313987}},
-            {"nombre": "LIM-B-Limon Indanza (E)/Gualaquiza (O)-F01-BB", "provincia": "MORONA SANTIAGO", "distancia": 70, "hilos_total": 48, "hilos_nodo": 0, "hilos_ocupados": 0, "hilos_recuperar": 48, "disponibilidad": 0.0, "coord_inicio": {"lat": -2.971079, "lng": -78.431995}, "coord_fin": {"lat": -3.404929, "lng": -78.577337}},
-            {"nombre": "MDZ-Tiwintza (E)/Mendez SDH (O)-F01-BB", "provincia": "MORONA SANTIAGO", "distancia": 85, "hilos_total": 48, "hilos_nodo": 0, "hilos_ocupados": 4, "hilos_recuperar": 44, "disponibilidad": 0.0, "coord_inicio": {"lat": -3.048502, "lng": -78.005579}, "coord_fin": {"lat": -2.719794, "lng": -78.3201}},
-            {"nombre": "MCS-Logroño (E)/Santa Ana cue (E)-F01-BB", "provincia": "MORONA SANTIAGO", "distancia": 60, "hilos_total": 48, "hilos_nodo": 0, "hilos_ocupados": 1, "hilos_recuperar": 47, "disponibilidad": 0.0, "coord_inicio": {"lat": -2.404286, "lng": -77.850704}, "coord_fin": {"lat": -2.303847, "lng": -78.100065}},
-            {"nombre": "AZG-Azogues (E)/Gualleturo cue (E)-F02-BB", "provincia": "CAÑAR", "distancia": 42, "hilos_total": 24, "hilos_nodo": 15, "hilos_ocupados": 2, "hilos_recuperar": 7, "disponibilidad": 62.5, "coord_inicio": {"lat": -2.739587, "lng": -78.845278}, "coord_fin": {"lat": -2.525743, "lng": -79.130602}},
-            {"nombre": "SIG-Sigsig (E)/Granadilla (O)-F01-BB", "provincia": "AZUAY", "distancia": 48, "hilos_total": 24, "hilos_nodo": 0, "hilos_ocupados": 13, "hilos_recuperar": 11, "disponibilidad": 0.0, "coord_inicio": {"lat": -3.050488, "lng": -78.793128}, "coord_fin": {"lat": -3.275125, "lng": -79.313987}},
-            {"nombre": "CNR-Javier Loyola(NE)- Bellavista Cuenca (A) / Colon Cañar (NE)-F01-BB", "provincia": "CUENCA", "distancia": 55, "hilos_total": 48, "hilos_nodo": 28, "hilos_ocupados": 10, "hilos_recuperar": 10, "disponibilidad": 58.33, "coord_inicio": {"lat": -2.636242, "lng": -78.600918}, "coord_fin": {"lat": -2.88881554, "lng": -79.0126183}},
-            {"nombre": "MCS-Taisha (E)-Macas sdh (O)/Chuwitayo(E)-F01-BB", "provincia": "MORONA SANTIAGO", "distancia": 80, "hilos_total": 48, "hilos_nodo": 0, "hilos_ocupados": 0, "hilos_recuperar": 0, "disponibilidad": 0.0, "coord_inicio": {"lat": -2.383611, "lng": -77.508889}, "coord_fin": {"lat": -2.312062, "lng": -78.121505}},
-            {"nombre": "MDZ-Mendez SDH (O)/Pahuancay (O)-F01-BB", "provincia": "MORONA SANTIAGO", "distancia": 90, "hilos_total": 48, "hilos_nodo": 0, "hilos_ocupados": 0, "hilos_recuperar": 0, "disponibilidad": 0.0, "coord_inicio": {"lat": -2.719794, "lng": -78.3201}, "coord_fin": {"lat": -2.636242, "lng": -78.600918}},
-            {"nombre": "MCS-Santa Ana cue (E )/Chuwitayo (E)-Macas sdh (O)-F02-BB", "provincia": "MORONA SANTIAGO", "distancia": 55, "hilos_total": 48, "hilos_nodo": 0, "hilos_ocupados": 0, "hilos_recuperar": 0, "disponibilidad": 0.0, "coord_inicio": {"lat": -2.303847, "lng": -78.100065}, "coord_fin": {"lat": -2.312062, "lng": -78.121505}},
-            {"nombre": "MCS-Macas sdh (O)/Chuwitayo(E)-F01-Bb", "provincia": "MORONA SANTIAGO", "distancia": 45, "hilos_total": 48, "hilos_nodo": 0, "hilos_ocupados": 0, "hilos_recuperar": 0, "disponibilidad": 0.0, "coord_inicio": {"lat": -2.312062, "lng": -78.121505}, "coord_fin": {"lat": -2.303847, "lng": -78.100065}},
-            {"nombre": "SISB-Pucara (E)- Santa Isabel (O)/ El Guabo(O)-F02-D02-DB", "provincia": "AZUAY", "distancia": 60, "hilos_total": 48, "hilos_nodo": 0, "hilos_ocupados": 0, "hilos_recuperar": 0, "disponibilidad": 0.0, "coord_inicio": {"lat": -3.223119, "lng": -79.470911}, "coord_fin": {"lat": -3.275125, "lng": -79.313987}},
-            {"nombre": "GLCO-Gualaceo (E)-Limon Indanza (E)/San Juan Bosco (E)/F01-D01-DB", "provincia": "MORONA SANTIAGO", "distancia": 75, "hilos_total": 48, "hilos_nodo": 11, "hilos_ocupados": 0, "hilos_recuperar": 37, "disponibilidad": 22.92, "coord_inicio": {"lat": -2.8887358, "lng": -78.779591}, "coord_fin": {"lat": -3.048502, "lng": -78.005579}},
+            {"nombre": "CUE-Bellavista Cuenca (A)/Giron (NE)-F01-BB", "provincia": "CUENCA", "distancia": 56, "hilos_total": 48, "hilos_nodo": 5, "hilos_ocupados": 12, "hilos_recuperar": 31, "disponibilidad": 10.42, "coord_inicio": {"lat": -2.88881554, "lng": -79.0126183}, "coord_fin": {"lat": -3.160695, "lng": -79.145868}},
+            {"nombre": "CUE-Bellavista Cuenca (A)/Gualaceo (E)-F01-BB", "provincia": "CUENCA", "distancia": 65, "hilos_total": 48, "hilos_nodo": 48, "hilos_ocupados": 0, "hilos_recuperar": 0, "disponibilidad": 100.0, "coord_inicio": {"lat": -2.88881554, "lng": -79.0126183}, "coord_fin": {"lat": -2.888778, "lng": -78.778145}},
+            {"nombre": "CUE-Bellavista Cuenca (A)/Pahuancay (O)-F01-BB", "provincia": "CUENCA", "distancia": 90, "hilos_total": 48, "hilos_nodo": 14, "hilos_ocupados": 7, "hilos_recuperar": 27, "disponibilidad": 29.17, "coord_inicio": {"lat": -2.88881554, "lng": -79.0126183}, "coord_fin": {"lat": -2.636242, "lng": -78.600918}},
+            {"nombre": "CUE-Bellavista Cuenca (A)/Oña (O)-F01-BB", "provincia": "CUENCA", "distancia": 113, "hilos_total": 48, "hilos_nodo": 4, "hilos_ocupados": 11, "hilos_recuperar": 33, "disponibilidad": 8.33, "coord_inicio": {"lat": -2.88881554, "lng": -79.0126183}, "coord_fin": {"lat": -3.470626, "lng": -79.154971}},
+            {"nombre": "CUE-Bellavista Cuenca (A)/Sigsig (E)-F01-BB", "provincia": "CUENCA", "distancia": 59, "hilos_total": 48, "hilos_nodo": 7, "hilos_ocupados": 14, "hilos_recuperar": 27, "disponibilidad": 14.58, "coord_inicio": {"lat": -2.88881554, "lng": -79.0126183}, "coord_fin": {"lat": -3.050488, "lng": -78.793128}},
+            {"nombre": "CUE-Bellavista Cuenca (A)/Molleturo (O)-F01-BB", "provincia": "CUENCA", "distancia": 67, "hilos_total": 48, "hilos_nodo": 36, "hilos_ocupados": 2, "hilos_recuperar": 10, "disponibilidad": 75.0, "coord_inicio": {"lat": -2.88881554, "lng": -79.0126183}, "coord_fin": {"lat": -2.765791, "lng": -79.39622}},
+            {"nombre": "CUE-Ñuñurco (NE)-Bellavista Cuenca(A)/Pahuancay (O)-F01-DB", "provincia": "CUENCA", "distancia": 42, "hilos_total": 5, "hilos_nodo": 3, "hilos_ocupados": 2, "hilos_recuperar": 21, "disponibilidad": 11.54, "coord_inicio": {"lat": -2.761497, "lng": -78.671846}, "coord_fin": {"lat": -2.760794, "lng": -78.677397}},
+            {"nombre": "CUE-Villaflor (NE) - Bellavista Cuenca(A)/Colon Cañar (NE)-F01-DB", "provincia": "CUENCA", "distancia": 17, "hilos_total": 12, "hilos_nodo": 5, "hilos_ocupados": 3, "hilos_recuperar": 4, "disponibilidad": 41.67, "coord_inicio": {"lat": -2.829142, "lng": -78.802993}, "coord_fin": {"lat": -2.833508, "lng": -78.878707}},
+            {"nombre": "CNR-Hostal Azogues (E)/Paute (E)-F01-BB", "provincia": "CAÑAR", "distancia": 28, "hilos_total": 48, "hilos_nodo": 34, "hilos_ocupados": 2, "hilos_recuperar": 12, "disponibilidad": 70.83, "coord_inicio": {"lat": -2.739365, "lng": -78.845337}, "coord_fin": {"lat": -2.77797, "lng": -78.766982}},
+            {"nombre": "CNR-Burgay (E)-Bellavista Cuenca (A)/Cañar (NE)/F01-D01-DB", "provincia": "CAÑAR", "distancia": 12, "hilos_total": 12, "hilos_nodo": 7, "hilos_ocupados": 5, "hilos_recuperar": 0, "disponibilidad": 58.33, "coord_inicio": {"lat": -2.708056, "lng": -78.893056}, "coord_fin": {"lat": -2.706042, "lng": -78.900608}},
+            {"nombre": "CNR-Colon Cañar (NE)/Tambo cue (NE)-F01-BB", "provincia": "CAÑAR", "distancia": 10, "hilos_total": 48, "hilos_nodo": 23, "hilos_ocupados": 8, "hilos_recuperar": 17, "disponibilidad": 47.92, "coord_inicio": {"lat": -2.566028, "lng": -78.938088}, "coord_fin": {"lat": -2.459628, "lng": -79.004278}},
+            {"nombre": "CNR-Colon Cañar (NE)/Tambo cue (NE)-F02-BB", "provincia": "CAÑAR", "distancia": 12, "hilos_total": 48, "hilos_nodo": 35, "hilos_ocupados": 2, "hilos_recuperar": 11, "disponibilidad": 72.92, "coord_inicio": {"lat": -2.566028, "lng": -78.938088}, "coord_fin": {"lat": -2.459628, "lng": -79.004278}},
+            {"nombre": "GTRO-Gualleturo cue (E)/La Troncal 2 (O)-Zhud (O)-F01-BB", "provincia": "CAÑAR", "distancia": 35, "hilos_total": 13, "hilos_nodo": 12, "hilos_ocupados": 1, "hilos_recuperar": 34, "disponibilidad": 25.53, "coord_inicio": {"lat": -2.524809, "lng": -79.130425}, "coord_fin": {"lat": -2.451404, "lng": -79.107239}},
+            {"nombre": "CNR-Gualleturo cue (E)/La Troncal 2 (O)-Zhud (O)-F01-D01-DB", "provincia": "CAÑAR", "distancia": 23, "hilos_total": 48, "hilos_nodo": 11, "hilos_ocupados": 2, "hilos_recuperar": 35, "disponibilidad": 22.92, "coord_inicio": {"lat": -2.524809, "lng": -79.130425}, "coord_fin": {"lat": -2.47346, "lng": -79.183197}},
+            {"nombre": "CNR-Javier Loyola(NE)- Bellavista Cuenca (A) / Colon Cañar (NE)-F01-D02-DB", "provincia": "CAÑAR", "distancia": 15, "hilos_total": 48, "hilos_nodo": 2, "hilos_ocupados": 4, "hilos_recuperar": 42, "disponibilidad": 4.17, "coord_inicio": null, "coord_fin": null},
+            {"nombre": "CNR-La Troncal 2 (E)/Zhud (O)-F01-BB", "provincia": "CAÑAR", "distancia": 80, "hilos_total": 48, "hilos_nodo": 1, "hilos_ocupados": 7, "hilos_recuperar": 40, "disponibilidad": 2.08, "coord_inicio": {"lat": -2.459628, "lng": -79.004278}, "coord_fin": {"lat": -2.42647, "lng": -79.344298}},
+            {"nombre": "CNR-Zhud (O)/Suscal (E)-F02-BB", "provincia": "CAÑAR", "distancia": 15, "hilos_total": 48, "hilos_nodo": 42, "hilos_ocupados": 2, "hilos_recuperar": 4, "disponibilidad": 87.5, "coord_inicio": {"lat": -2.459628, "lng": -79.004278}, "coord_fin": {"lat": -2.436544, "lng": -79.052309}},
+            {"nombre": "CNR-Zhud (O)/Tambo cue (NE)-F01-BB", "provincia": "CAÑAR", "distancia": 21, "hilos_total": 12, "hilos_nodo": 6, "hilos_ocupados": 6, "hilos_recuperar": 0, "disponibilidad": 50.0, "coord_inicio": {"lat": -2.459628, "lng": -79.004278}, "coord_fin": {"lat": -2.508243, "lng": -78.92756}},
+            {"nombre": "CNR-Zhud (O)/Colon Canar (NE)-F02-BB", "provincia": "CAÑAR", "distancia": 29, "hilos_total": 24, "hilos_nodo": 7, "hilos_ocupados": 1, "hilos_recuperar": 16, "disponibilidad": 29.17, "coord_inicio": {"lat": -2.459628, "lng": -79.004278}, "coord_fin": {"lat": -2.566028, "lng": -78.938088}},
+            {"nombre": "CHLG-Chordeleg (E)/Sigsig (E)-F01-BB", "provincia": "AZUAY", "distancia": 32, "hilos_total": 48, "hilos_nodo": 22, "hilos_ocupados": 8, "hilos_recuperar": 18, "disponibilidad": 45.83, "coord_inicio": {"lat": -2.920383, "lng": -78.774679}, "coord_fin": {"lat": -3.050488, "lng": -78.793128}},
+            {"nombre": "GIR-Giron (NE)/San Fernando  (E)-F01-BB", "provincia": "AZUAY", "distancia": 21, "hilos_total": 24, "hilos_nodo": 9, "hilos_ocupados": 0, "hilos_recuperar": 15, "disponibilidad": 37.5, "coord_inicio": {"lat": -3.160695, "lng": -79.145868}, "coord_fin": {"lat": -3.146065, "lng": -79.251742}},
+            {"nombre": "GLCO-Gualaceo (E)/Bellavista Cuenca (A)-Pahuancay (O)-F01-BB", "provincia": "AZUAY", "distancia": 0, "hilos_total": 48, "hilos_nodo": 3, "hilos_ocupados": 1, "hilos_recuperar": 44, "disponibilidad": 6.25, "coord_inicio": {"lat": -2.888778, "lng": -78.778145}, "coord_fin": {"lat": -2.864613, "lng": -78.778719}},
+            {"nombre": "GLCO-Gualaceo (E)/Bellavista Cuenca (A)-Sigsig (E)-F02-BB", "provincia": "AZUAY", "distancia": 25, "hilos_total": 48, "hilos_nodo": 22, "hilos_ocupados": 6, "hilos_recuperar": 20, "disponibilidad": 45.83, "coord_inicio": {"lat": -2.888778, "lng": -78.778145}, "coord_fin": {"lat": -3.000717, "lng": -78.829196}},
+            {"nombre": "GLCO-Gualaceo (E)/Chordeleg (E)-F01-BB", "provincia": "AZUAY", "distancia": 6, "hilos_total": 48, "hilos_nodo": 41, "hilos_ocupados": 7, "hilos_recuperar": 0, "disponibilidad": 85.42, "coord_inicio": {"lat": -2.888778, "lng": -78.778145}, "coord_fin": {"lat": -2.920383, "lng": -78.774679}},
+            {"nombre": "GLCO-Gualaceo (E)/Ñuñurco (NE)-F01-BB", "provincia": "AZUAY", "distancia": 50, "hilos_total": 48, "hilos_nodo": 48, "hilos_ocupados": 0, "hilos_recuperar": 0, "disponibilidad": 100.0, "coord_inicio": {"lat": -2.888778, "lng": -78.778145}, "coord_fin": {"lat": -2.760794, "lng": -78.677397}},
+            {"nombre": "GLCO-Gualaceo (E)-Limon Indanza (E)/San Juan Bosco (E)/F01-D01-DB", "provincia": "AZUAY", "distancia": 80, "hilos_total": 48, "hilos_nodo": 11, "hilos_ocupados": 0, "hilos_recuperar": 37, "disponibilidad": 22.92, "coord_inicio": {"lat": -2.888778, "lng": -78.778145}, "coord_fin": {"lat": -3.011413, "lng": -78.486741}},
+            {"nombre": "GLQ-Gualaquiza  (O)/Granadilla (O)-F01-BB", "provincia": "MORONA SANTIAGO", "distancia": 55, "hilos_total": 24, "hilos_nodo": 0, "hilos_ocupados": 14, "hilos_recuperar": 10, "disponibilidad": 0.0, "coord_inicio": {"lat": -3.403667, "lng": -78.5795}, "coord_fin": {"lat": -3.209508, "lng": -78.75297}},
+            {"nombre": "GLQ-Gualaquiza (O)/San Juan Bosco (E)-F01-BB", "provincia": "MORONA SANTIAGO", "distancia": 58, "hilos_total": 48, "hilos_nodo": 31, "hilos_ocupados": 5, "hilos_recuperar": 12, "disponibilidad": 64.58, "coord_inicio": {"lat": -3.403667, "lng": -78.5795}, "coord_fin": {"lat": -3.1202, "lng": -78.531256}},
+            {"nombre": "LIM-B-Limon Indanza (E)/Gualaquiza (O)-F01-BB", "provincia": "MORONA SANTIAGO", "distancia": 100, "hilos_total": 48, "hilos_nodo": 24, "hilos_ocupados": 0, "hilos_recuperar": 24, "disponibilidad": 50.0, "coord_inicio": {"lat": -2.966844, "lng": -78.432994}, "coord_fin": {"lat": -3.403667, "lng": -78.5795}},
+            {"nombre": "MCS-Macas sdh (O)/Sucua (E)-F01-BB", "provincia": "MORONA SANTIAGO", "distancia": 24, "hilos_total": 48, "hilos_nodo": 39, "hilos_ocupados": 6, "hilos_recuperar": 3, "disponibilidad": 81.25, "coord_inicio": {"lat": -2.312128, "lng": -78.122132}, "coord_fin": {"lat": -2.454722, "lng": -78.174167}},
+            {"nombre": "MCS-Santa Ana cue (E)/Macas sdh (O)-Chuwitayo (E)-F01-D01-DB", "provincia": "MORONA SANTIAGO", "distancia": 0, "hilos_total": 48, "hilos_nodo": 30, "hilos_ocupados": 9, "hilos_recuperar": 7, "disponibilidad": 65.22, "coord_inicio": {"lat": -2.298637, "lng": -78.102748}, "coord_fin": {"lat": -2.299458, "lng": -78.099963}},
+            {"nombre": "MCS-Taisha (E)-Macas sdh (O)/Chuwitayo(E)-F01-BB", "provincia": "MORONA SANTIAGO", "distancia": 0, "hilos_total": 48, "hilos_nodo": 20, "hilos_ocupados": 12, "hilos_recuperar": 12, "disponibilidad": 45.45, "coord_inicio": {"lat": -2.107495, "lng": -78.025602}, "coord_fin": {"lat": -2.118487, "lng": -77.794347}},
+            {"nombre": "MCS-Santa Ana cue (E )/Chuwitayo (E)-Macas sdh (O)-F02-BB", "provincia": "MORONA SANTIAGO", "distancia": 0, "hilos_total": 48, "hilos_nodo": 22, "hilos_ocupados": 6, "hilos_recuperar": 14, "disponibilidad": 52.38, "coord_inicio": {"lat": -2.298637, "lng": -78.102748}, "coord_fin": {"lat": -2.299458, "lng": -78.099963}},
+            {"nombre": "MCS-Macas sdh (O)/Chuwitayo(E)-F01-Bb", "provincia": "MORONA SANTIAGO", "distancia": 0, "hilos_total": 48, "hilos_nodo": 16, "hilos_ocupados": 8, "hilos_recuperar": 34, "disponibilidad": 27.59, "coord_inicio": {"lat": -2.312128, "lng": -78.122132}, "coord_fin": {"lat": -1.908174, "lng": -77.816879}},
+            {"nombre": "MCS-Sucua (E)/Logroño  (NE)-F01-BB", "provincia": "MORONA SANTIAGO", "distancia": 24, "hilos_total": 48, "hilos_nodo": 42, "hilos_ocupados": 6, "hilos_recuperar": 0, "disponibilidad": 87.5, "coord_inicio": {"lat": -2.454722, "lng": -78.174167}, "coord_fin": {"lat": -2.626537, "lng": -78.198827}},
+            {"nombre": "MCS-Logroño (E)/Santa Ana cue (E)-F01-BB", "provincia": "MORONA SANTIAGO", "distancia": 46, "hilos_total": 0, "hilos_nodo": 20, "hilos_ocupados": 12, "hilos_recuperar": 12, "disponibilidad": 45.45, "coord_inicio": {"lat": -2.626537, "lng": -78.198827}, "coord_fin": {"lat": -2.299458, "lng": -78.099963}},
+            {"nombre": "MDZ-Tiwintza (E)/Mendez SDH (O)-F01-BB", "provincia": "MORONA SANTIAGO", "distancia": 102, "hilos_total": 4, "hilos_nodo": 32, "hilos_ocupados": 4, "hilos_recuperar": 12, "disponibilidad": 66.67, "coord_inicio": {"lat": -3.052161, "lng": -78.005375}, "coord_fin": {"lat": -2.718751, "lng": -78.320473}},
+            {"nombre": "MDZ-Mendez SDH (O)/Limon Indanza (NE)-F01-BB", "provincia": "MORONA SANTIAGO", "distancia": 51, "hilos_total": 48, "hilos_nodo": 34, "hilos_ocupados": 5, "hilos_recuperar": 9, "disponibilidad": 70.83, "coord_inicio": {"lat": -2.718751, "lng": -78.320473}, "coord_fin": {"lat": -2.966844, "lng": -78.432994}},
+            {"nombre": "MDZ-Mendez SDH (O)/Sucua (E)-F01-BB", "provincia": "MORONA SANTIAGO", "distancia": 0, "hilos_total": 0, "hilos_nodo": 18, "hilos_ocupados": 4, "hilos_recuperar": 14, "disponibilidad": 50.0, "coord_inicio": {"lat": -2.718751, "lng": -78.320473}, "coord_fin": {"lat": -2.454722, "lng": -78.174167}},
+            {"nombre": "MDZ-Mendez SDH (O)/Pahuancay (O)-F01-BB", "provincia": "MORONA SANTIAGO", "distancia": 0, "hilos_total": 0, "hilos_nodo": 21, "hilos_ocupados": 6, "hilos_recuperar": 17, "disponibilidad": 47.73, "coord_inicio": {"lat": -2.718751, "lng": -78.320473}, "coord_fin": {"lat": -2.636242, "lng": -78.600918}},
+            {"nombre": "SJB-San Juan Bosco (E)/Limon Indanza (NE)-F01-BB", "provincia": "MORONA SANTIAGO", "distancia": 39, "hilos_total": 48, "hilos_nodo": 44, "hilos_ocupados": 4, "hilos_recuperar": 0, "disponibilidad": 91.67, "coord_inicio": {"lat": -3.1202, "lng": -78.531256}, "coord_fin": {"lat": -2.966844, "lng": -78.432994}},
+            {"nombre": "NBN-Nabon (E)-Bellavista Cuenca (A)/Oña (O)/F01-D02-DB", "provincia": "AZUAY", "distancia": 20, "hilos_total": 48, "hilos_nodo": 14, "hilos_ocupados": 7, "hilos_recuperar": 27, "disponibilidad": 29.17, "coord_inicio": {"lat": -3.340539, "lng": -79.06593}, "coord_fin": {"lat": -3.254734, "lng": -79.068823}},
+            {"nombre": "NBON-Nabon (E)-Oña (O)/Bellavista Cuenca (A)-F01-D01-DB", "provincia": "AZUAY", "distancia": 16, "hilos_total": 48, "hilos_nodo": 10, "hilos_ocupados": 2, "hilos_recuperar": 36, "disponibilidad": 20.83, "coord_inicio": {"lat": -3.340539, "lng": -79.06593}, "coord_fin": {"lat": -3.303679, "lng": -79.116726}},
+            {"nombre": "PAU-Villaflor (NE)/Paute(O)-F01-BB", "provincia": "AZUAY", "distancia": 15, "hilos_total": 12, "hilos_nodo": 4, "hilos_ocupados": 2, "hilos_recuperar": 6, "disponibilidad": 33.33, "coord_inicio": {"lat": -2.829142, "lng": -78.802993}, "coord_fin": {"lat": -2.77797, "lng": -78.766982}},
+            {"nombre": "SIG-Sigsig (E)/Granadilla (O)-F01-BB", "provincia": "AZUAY", "distancia": 45, "hilos_total": 24, "hilos_nodo": 0, "hilos_ocupados": 13, "hilos_recuperar": 11, "disponibilidad": 0.0, "coord_inicio": {"lat": -3.050488, "lng": -78.793128}, "coord_fin": {"lat": -3.209508, "lng": -78.75297}},
+            {"nombre": "SISB-Giron(E)/Santa Isabel(O)-F01-BB", "provincia": "AZUAY", "distancia": 31, "hilos_total": 36, "hilos_nodo": 22, "hilos_ocupados": 9, "hilos_recuperar": 5, "disponibilidad": 61.11, "coord_inicio": {"lat": -3.160695, "lng": -79.145868}, "coord_fin": {"lat": -3.274622, "lng": -79.313995}},
+            {"nombre": "SISB-Santa Isabel (O)/ El Guabo (E)-F01-BB", "provincia": "AZUAY", "distancia": 63, "hilos_total": 48, "hilos_nodo": 15, "hilos_ocupados": 12, "hilos_recuperar": 21, "disponibilidad": 31.25, "coord_inicio": {"lat": -3.274622, "lng": -79.313995}, "coord_fin": {"lat": -3.319347, "lng": -79.713051}},
+            {"nombre": "SISB-Santa Isabel (O)/ Pucara Santa Isabel (E)-F01-BB", "provincia": "AZUAY", "distancia": 51, "hilos_total": 48, "hilos_nodo": 10, "hilos_ocupados": 3, "hilos_recuperar": 35, "disponibilidad": 20.83, "coord_inicio": {"lat": -3.274622, "lng": -79.313995}, "coord_fin": {"lat": -3.222194, "lng": -79.470811}},
+            {"nombre": "SISB-San Fernando (E)- Santa Isabel (O)/ El Guabo(O)-F02-D01-DB", "provincia": "AZUAY", "distancia": 24, "hilos_total": 48, "hilos_nodo": 43, "hilos_ocupados": 1, "hilos_recuperar": 4, "disponibilidad": 89.58, "coord_inicio": {"lat": -3.246809, "lng": -79.236203}, "coord_fin": {"lat": -3.274622, "lng": -79.313995}},
+            {"nombre": "SISB-Pucara (E)- Santa Isabel (O)/ El Guabo(O)-F02-D02-DB", "provincia": "AZUAY", "distancia": 60, "hilos_total": 48, "hilos_nodo": 48, "hilos_ocupados": 0, "hilos_recuperar": 0, "disponibilidad": 100.0, "coord_inicio": {"lat": -3.222194, "lng": -79.470811}, "coord_fin": {"lat": -3.310133, "lng": -79.509439}},
         ];
 
         // Función para obtener color según disponibilidad
@@ -470,7 +709,7 @@
 
         // Cargar tarjetas de rutas críticas
         function cargarRutasCriticas() {
-            const rutasCriticas = todasLasRutas.filter(r => r.disponibilidad < 25).sort((a, b) => a.disponibilidad - b.disponibilidad);
+            const rutasCriticas = todasLasRutas.filter(r => r.disponibilidad < 20).sort((a, b) => a.disponibilidad - b.disponibilidad);
             const grid = document.getElementById('rutasGrid');
             
             rutasCriticas.forEach(ruta => {
