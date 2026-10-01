@@ -1,968 +1,1077 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Estado de Hilos de Rutas Interurbanas</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #f0f2f5;
-            color: #333;
-        }
-
-        .container {
-            max-width: 1600px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-
-        .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 40px;
-            border-radius: 12px;
-            margin-bottom: 30px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-        }
-
-        .header h1 {
-            font-size: 36px;
-            margin-bottom: 10px;
-            font-weight: 700;
-        }
-
-        .header p {
-            font-size: 16px;
-            opacity: 0.95;
-        }
-
-        .kpi-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 20px;
-            margin-bottom: 40px;
-        }
-
-        .kpi-card {
-            background: white;
-            padding: 25px;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            border-top: 4px solid #667eea;
-            transition: all 0.3s;
-            position: relative;
-        }
-
-        .kpi-card:hover {
-            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
-            transform: translateY(-2px);
-        }
-
-        .kpi-card.kpi-hover {
-            cursor: help;
-        }
-
-        .kpi-tooltip {
-            display: none;
-            position: absolute;
-            top: 100%;
-            left: 0;
-            right: 0;
-            margin-top: 10px;
-            background: #1f2937;
-            color: white;
-            border-radius: 10px;
-            padding: 14px 16px;
-            box-shadow: 0 10px 24px rgba(0, 0, 0, 0.25);
-            z-index: 50;
-            max-height: 260px;
-            overflow-y: auto;
-        }
-
-        .kpi-card.kpi-hover:hover .kpi-tooltip {
-            display: block;
-        }
-
-        .kpi-tooltip-title {
-            font-size: 11px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            color: #9ca3af;
-            margin-bottom: 8px;
-            font-weight: 700;
-        }
-
-        .kpi-tooltip ul {
-            list-style: none;
-            margin: 0;
-            padding: 0;
-        }
-
-        .kpi-tooltip li {
-            font-size: 12px;
-            padding: 5px 0;
-            border-bottom: 1px solid rgba(255,255,255,0.08);
-            line-height: 1.4;
-        }
-
-        .kpi-tooltip li:last-child {
-            border-bottom: none;
-        }
-
-        .kpi-label {
-            font-size: 12px;
-            color: #999;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 8px;
-            font-weight: 600;
-        }
-
-        .kpi-value {
-            font-size: 32px;
-            font-weight: 700;
-            color: #667eea;
-            margin-bottom: 5px;
-        }
-
-        .kpi-unit {
-            font-size: 12px;
-            color: #bbb;
-        }
-
-        /* Colores específicos para tarjetas */
-        .kpi-rutas { border-top-color: #667eea; }
-        .kpi-disponibles { border-top-color: #48bb78; }
-        .kpi-recuperar { border-top-color: #f56565; }
-        .kpi-porcentaje { border-top-color: #eab308; }
-        .kpi-verde { border-top-color: #16a34a; }
-        .kpi-amarillo { border-top-color: #eab308; }
-        .kpi-naranja { border-top-color: #f97316; }
-        .kpi-rojo { border-top-color: #dc2626; }
-
-        .section-title {
-            font-size: 24px;
-            font-weight: 700;
-            color: #333;
-            margin-bottom: 25px;
-            padding-bottom: 15px;
-            border-bottom: 3px solid #667eea;
-        }
-
-        .rutas-criticas-container {
-            margin-bottom: 40px;
-        }
-
-        .rutas-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-
-        .ruta-card {
-            background: white;
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            transition: all 0.3s;
-            border-left: 5px solid #f56565;
-            cursor: pointer;
-            position: relative;
-        }
-
-        .ruta-card:hover {
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
-            transform: translateY(-4px);
-        }
-
-        .ruta-card-header {
-            background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%);
-            color: white;
-            padding: 15px;
-        }
-
-        .ruta-nombre {
-            font-weight: 700;
-            font-size: 13px;
-            margin-bottom: 5px;
-            line-height: 1.4;
-            word-break: break-word;
-        }
-
-        .ruta-provincia {
-            font-size: 12px;
-            opacity: 0.9;
-        }
-
-        .disponibilidad-badge {
-            display: inline-block;
-            background: white;
-            color: #f56565;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 13px;
-            font-weight: 700;
-            margin-top: 8px;
-        }
-
-        .ruta-card-body {
-            padding: 20px;
-            display: none;
-            animation: slideDown 0.3s ease-out;
-        }
-
-        .ruta-card:hover .ruta-card-body {
-            display: block;
-        }
-
-        @keyframes slideDown {
-            from {
-                opacity: 0;
-                transform: translateY(-10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .ruta-detail {
-            margin-bottom: 12px;
-            padding: 10px;
-            background: #f9f9f9;
-            border-radius: 6px;
-            border-left: 3px solid #667eea;
-        }
-
-        .ruta-detail-label {
-            font-size: 11px;
-            color: #999;
-            text-transform: uppercase;
-            font-weight: 600;
-            margin-bottom: 4px;
-            letter-spacing: 0.5px;
-        }
-
-        .ruta-detail-value {
-            font-size: 16px;
-            font-weight: 700;
-            color: #333;
-        }
-
-        .ruta-detail-value span {
-            font-size: 12px;
-            color: #666;
-            font-weight: normal;
-            margin-left: 5px;
-        }
-
-        .plan-accion-container {
-            margin-bottom: 40px;
-        }
-
-        .plan-timeline {
-            display: flex;
-            flex-direction: column;
-            gap: 18px;
-        }
-
-        .quincena-card {
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
-            border-left: 5px solid #667eea;
-        }
-
-        .quincena-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 14px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
-
-        .quincena-titulo {
-            font-size: 16px;
-            font-weight: 700;
-        }
-
-        .quincena-fechas {
-            font-size: 13px;
-            opacity: 0.95;
-            background: rgba(255,255,255,0.15);
-            padding: 4px 12px;
-            border-radius: 20px;
-        }
-
-        .quincena-rutas {
-            padding: 10px 0;
-        }
-
-        .plan-ruta-item {
-            display: grid;
-            grid-template-columns: 36px 1fr auto auto auto;
-            align-items: center;
-            gap: 14px;
-            padding: 10px 20px;
-            border-bottom: 1px solid #f0f0f0;
-        }
-
-        .plan-ruta-item:last-child {
-            border-bottom: none;
-        }
-
-        .plan-orden {
-            width: 28px;
-            height: 28px;
-            border-radius: 50%;
-            background: #667eea;
-            color: white;
-            font-size: 12px;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .plan-ruta-nombre {
-            font-size: 13px;
-            font-weight: 600;
-            color: #333;
-        }
-
-        .plan-ruta-provincia {
-            font-size: 11px;
-            color: #999;
-            text-transform: uppercase;
-            white-space: nowrap;
-        }
-
-        .plan-ruta-disp {
-            font-size: 12px;
-            font-weight: 700;
-            padding: 3px 10px;
-            border-radius: 20px;
-            white-space: nowrap;
-            color: white;
-        }
-
-        .plan-ruta-hilos {
-            font-size: 12px;
-            color: #666;
-            white-space: nowrap;
-        }
-
-        @media (max-width: 768px) {
-            .plan-ruta-item {
-                grid-template-columns: 28px 1fr;
-            }
-            .plan-ruta-provincia, .plan-ruta-hilos {
-                display: none;
-            }
-        }
-
-        .recordatorios-box {
-            background: #fff8e6;
-            border: 1px solid #f5d590;
-            border-left: 5px solid #f59e0b;
-            border-radius: 12px;
-            padding: 18px 22px;
-            margin-bottom: 40px;
-            margin-top: -22px;
-        }
-
-        .recordatorios-box .recordatorios-titulo {
-            font-size: 15px;
-            font-weight: 700;
-            color: #92400e;
-            margin-bottom: 10px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .recordatorios-box ol {
-            margin: 0;
-            padding-left: 20px;
-        }
-
-        .recordatorios-box li {
-            font-size: 13.5px;
-            color: #7a4a04;
-            line-height: 1.7;
-        }
-
-        .recordatorios-box li strong {
-            color: #92400e;
-        }
-
-        .mapa-wrapper {
-            display: flex;
-            gap: 20px;
-            margin-top: 20px;
-            align-items: stretch;
-        }
-
-        .map-container {
-            background: white;
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            height: 350px;
-            flex: 1;
-        }
-
-        #map {
-            width: 100%;
-            height: 100%;
-        }
-
-        .legend {
-            background: white;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            flex: 0 0 220px;
-        }
-
-        .legend-title {
-            font-size: 16px;
-            font-weight: 700;
-            margin-bottom: 20px;
-            color: #333;
-        }
-
-        .legend-items {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-
-        .legend-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .legend-color {
-            width: 24px;
-            height: 24px;
-            border-radius: 4px;
-            flex-shrink: 0;
-        }
-
-        .legend-label {
-            font-size: 13px;
-            color: #666;
-        }
-
-        @media (max-width: 768px) {
-            .mapa-wrapper {
-                flex-direction: column;
-            }
-
-            .legend {
-                flex: 1;
-            }
-        }
-
-        .info-box {
-            background: #e6f2ff;
-            border-left: 4px solid #667eea;
-            padding: 20px;
-            border-radius: 8px;
-            margin-bottom: 30px;
-        }
-
-        .info-box p {
-            font-size: 14px;
-            color: #333;
-            line-height: 1.6;
-        }
-
-        .hover-hint {
-            font-size: 11px;
-            color: #999;
-            font-style: italic;
-            margin-top: 5px;
-        }
-
-        @media (max-width: 768px) {
-            .kpi-grid {
-                grid-template-columns: 1fr 1fr;
-            }
-
-            .rutas-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .header h1 {
-                font-size: 24px;
-            }
-
-            .ruta-nombre {
-                font-size: 12px;
-            }
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Dashboard Hilos Interurbanos — Telconet</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f0f4f8;
+    --surface: #ffffff;
+    --surface2: #e8eef4;
+    --border: #cbd5e1;
+    --text: #1e293b;
+    --text-muted: #64748b;
+    --text-dim: #94a3b8;
+
+    --verde: #22c55e;
+    --verde-bg: rgba(34,197,94,0.12);
+    --verde-border: rgba(34,197,94,0.3);
+    --amarillo: #f59e0b;
+    --amarillo-bg: rgba(245,158,11,0.12);
+    --amarillo-border: rgba(245,158,11,0.3);
+    --naranja: #f97316;
+    --naranja-bg: rgba(249,115,22,0.12);
+    --naranja-border: rgba(249,115,22,0.3);
+    --rojo: #ef4444;
+    --rojo-bg: rgba(239,68,68,0.12);
+    --rojo-border: rgba(239,68,68,0.3);
+    --liberada: #38bdf8;
+    --liberada-bg: rgba(56,189,248,0.10);
+
+    --font: 'Inter', sans-serif;
+    --mono: 'JetBrains Mono', monospace;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; background: var(--bg); color: var(--text); font-family: var(--font); }
+
+  /* HEADER */
+  header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 24px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    position: sticky; top: 0; z-index: 100;
+  }
+  .logo-area { display: flex; align-items: center; gap: 12px; }
+  .logo-icon {
+    width: 34px; height: 34px;
+    background: linear-gradient(135deg, #2563eb, #0ea5e9);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+  }
+  .logo-text { font-size: 13px; font-weight: 600; letter-spacing: 0.02em; }
+  .logo-sub { font-size: 11px; color: var(--text-muted); font-weight: 400; margin-top: 1px; }
+  .header-meta { font-size: 11px; color: var(--text-muted); font-family: var(--mono); }
+  #reloj { color: #38bdf8; }
+
+  /* LAYOUT */
+  main { padding: 20px 24px 40px; max-width: 1600px; margin: 0 auto; }
+
+  /* LEYENDA GLOBAL */
+  .leyenda-global {
+    display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 18px;
+    align-items: center;
+  }
+  .leyenda-global span { font-size: 11px; color: var(--text-muted); margin-right: 4px; }
+  .leg-chip {
+    display: flex; align-items: center; gap: 6px;
+    padding: 4px 10px; border-radius: 20px;
+    font-size: 11px; font-weight: 500; border: 1px solid;
+  }
+  .leg-dot { width: 8px; height: 8px; border-radius: 50%; }
+
+  /* SECCIÓN MAPA */
+  .section-title {
+    font-size: 11px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.08em; color: var(--text-muted);
+    margin-bottom: 12px; display: flex; align-items: center; gap: 8px;
+  }
+  .section-title::after {
+    content: ''; flex: 1; height: 1px; background: var(--border);
+  }
+
+  .map-container {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    margin-bottom: 20px;
+    overflow: hidden;
+  }
+
+  #mapa-svg {
+    width: 100%; height: auto;
+    display: block;
+  }
+
+  /* Tooltip */
+  #tooltip {
+    position: fixed;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 12px;
+    pointer-events: none;
+    z-index: 999;
+    display: none;
+    max-width: 260px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  }
+  #tooltip .tt-ruta { font-weight: 600; font-size: 13px; margin-bottom: 4px; }
+  #tooltip .tt-nodos { color: var(--text-muted); font-size: 11px; margin-bottom: 6px; }
+  #tooltip .tt-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+  #tooltip .tt-stat { font-size: 11px; }
+  #tooltip .tt-stat span { color: var(--text-muted); display: block; font-size: 10px; }
+
+  /* FILTROS */
+  .filtros {
+    display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap;
+    align-items: center;
+  }
+  .filtro-btn {
+    padding: 5px 12px; border-radius: 6px; border: 1px solid var(--border);
+    background: var(--surface); color: var(--text-muted);
+    font-size: 11px; font-weight: 500; cursor: pointer;
+    font-family: var(--font); transition: all 0.15s;
+  }
+  .filtro-btn:hover, .filtro-btn.active {
+    background: var(--surface2); color: var(--text); border-color: #4a6fa5;
+  }
+  .filtro-label { font-size: 11px; color: var(--text-muted); }
+
+  /* GRID TARJETAS */
+  .rutas-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 10px;
+    margin-bottom: 28px;
+  }
+
+  .ruta-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 14px;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+    position: relative;
+    overflow: hidden;
+  }
+  .ruta-card::before {
+    content: ''; position: absolute; left: 0; top: 0; bottom: 0;
+    width: 3px; border-radius: 8px 0 0 8px;
+  }
+  .ruta-card.verde::before { background: var(--verde); }
+  .ruta-card.amarillo::before { background: var(--amarillo); }
+  .ruta-card.naranja::before { background: var(--naranja); }
+  .ruta-card.rojo::before { background: var(--rojo); }
+  .ruta-card.liberada::before { background: var(--liberada); }
+  .ruta-card:hover { border-color: #4a6fa5; background: var(--surface2); }
+
+  .card-nombre {
+    font-size: 12px; font-weight: 600; margin-bottom: 2px;
+    padding-left: 2px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .card-nodos {
+    font-size: 10px; color: var(--text-muted); margin-bottom: 10px;
+    padding-left: 2px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+
+  .card-bar-wrap {
+    background: rgba(255,255,255,0.06);
+    border-radius: 4px; height: 6px; margin-bottom: 8px; overflow: hidden;
+  }
+  .card-bar { height: 100%; border-radius: 4px; transition: width 0.4s ease; }
+
+  .card-nums {
+    display: flex; justify-content: space-between; align-items: flex-end;
+  }
+  .card-pct {
+    font-size: 18px; font-weight: 700; font-family: var(--mono);
+    line-height: 1;
+  }
+  .card-detail {
+    font-size: 10px; color: var(--text-muted); text-align: right; line-height: 1.5;
+  }
+
+  .card-badge {
+    font-size: 9px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 2px 6px; border-radius: 4px;
+    position: absolute; top: 10px; right: 10px;
+  }
+
+  /* RANGOS INDICADORES */
+  .rangos-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;
+    margin-bottom: 0;
+  }
+  @media (max-width: 700px) { .rangos-grid { grid-template-columns: repeat(2,1fr); } }
+
+  .rango-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 16px 18px;
+    cursor: pointer; transition: border-color 0.18s, transform 0.12s;
+    position: relative; overflow: hidden; user-select: none;
+  }
+  .rango-card::before {
+    content:''; position:absolute; left:0; top:0; bottom:0;
+    width:4px; border-radius:10px 0 0 10px;
+  }
+  .rango-card.verde::before  { background: var(--verde); }
+  .rango-card.amarillo::before { background: var(--amarillo); }
+  .rango-card.naranja::before  { background: var(--naranja); }
+  .rango-card.rojo::before   { background: var(--rojo); }
+  .rango-card:hover { border-color: #4a6fa5; transform: translateY(-1px); }
+  .rango-card.activo.verde  { border-color: var(--verde);   background: var(--verde-bg); }
+  .rango-card.activo.amarillo { border-color: var(--amarillo); background: var(--amarillo-bg); }
+  .rango-card.activo.naranja  { border-color: var(--naranja);  background: var(--naranja-bg); }
+  .rango-card.activo.rojo   { border-color: var(--rojo);    background: var(--rojo-bg); }
+
+  .rango-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 6px; font-weight: 600; }
+  .rango-val   { font-size: 40px; font-weight: 700; font-family: var(--mono); line-height: 1; margin-bottom: 4px; }
+  .rango-rango { font-size: 11px; color: var(--text-muted); margin-bottom: 2px; }
+  .rango-sub   { font-size: 10px; color: var(--text-muted); }
+  .rango-chevron {
+    position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+    font-size: 14px; color: var(--text-dim); transition: transform 0.2s;
+  }
+  .rango-card.activo .rango-chevron { transform: translateY(-50%) rotate(90deg); }
+
+  /* PANEL DESPLEGABLE */
+  .panel-rutas {
+    overflow: hidden; max-height: 0;
+    transition: max-height 0.35s ease, opacity 0.25s ease;
+    opacity: 0;
+  }
+  .panel-rutas.abierto { max-height: 900px; opacity: 1; }
+  .panel-inner {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 10px; margin-top: 12px; padding: 16px;
+  }
+  .panel-titulo {
+    font-size: 11px; font-weight: 600; color: var(--text-muted);
+    text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 12px;
+  }
+  .panel-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 8px;
+  }
+  .panel-item {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; padding: 11px 13px; cursor: pointer;
+    transition: border-color 0.15s;
+    position: relative; overflow: hidden;
+  }
+  .panel-item::before {
+    content:''; position:absolute; left:0; top:0; bottom:0; width:3px; border-radius:8px 0 0 8px;
+  }
+  .panel-item.verde::before  { background: var(--verde); }
+  .panel-item.amarillo::before { background: var(--amarillo); }
+  .panel-item.naranja::before  { background: var(--naranja); }
+  .panel-item.rojo::before   { background: var(--rojo); }
+  .panel-item.liberada::before { background: var(--liberada); }
+  .panel-item:hover { border-color: #4a6fa5; }
+  .pi-nombre { font-size: 12px; font-weight: 600; margin-bottom: 2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .pi-nodos  { font-size: 10px; color: var(--text-muted); margin-bottom: 8px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .pi-bar-wrap { background: rgba(255,255,255,0.06); border-radius:3px; height:4px; margin-bottom:6px; overflow:hidden; }
+  .pi-bar { height:100%; border-radius:3px; }
+  .pi-nums { display:flex; justify-content:space-between; align-items:center; }
+  .pi-pct  { font-size:16px; font-weight:700; font-family:var(--mono); }
+  .pi-det  { font-size:10px; color:var(--text-muted); text-align:right; line-height:1.4; }
+
+  /* RESUMEN SUPERIOR (ahora solo para totales globales) */
+  .kpi-row {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;
+    margin-bottom: 20px;
+  }
+  @media (max-width: 700px) { .kpi-row { grid-template-columns: repeat(2,1fr); } }
+
+  .kpi-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; padding: 14px 16px;
+  }
+  .kpi-label { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
+  .kpi-val { font-size: 26px; font-weight: 700; font-family: var(--mono); line-height: 1; }
+  .kpi-sub { font-size: 10px; color: var(--text-muted); margin-top: 4px; }
+
+  /* SELECTOR DE MES HISTÓRICO */
+  .hist-selector {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 16px 20px; margin-bottom: 20px;
+  }
+  .hist-top {
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 12px;
+  }
+  .hist-label { font-size: 12px; font-weight: 600; }
+  .hist-label span { color: var(--text-muted); font-weight: 400; font-size: 11px; margin-left: 8px; }
+
+  .mes-tabs { display: flex; gap: 6px; }
+  .mes-tab {
+    padding: 6px 14px; border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--surface2); color: var(--text-muted);
+    font-size: 12px; font-weight: 500; cursor: pointer;
+    font-family: var(--font); transition: all 0.15s;
+    position: relative;
+  }
+  .mes-tab:hover { color: var(--text); border-color: #4a6fa5; }
+  .mes-tab.activo {
+    background: #dbeafe; color: #1d4ed8;
+    border-color: #2563eb; font-weight: 600;
+  }
+  .mes-tab .mes-badge {
+    position: absolute; top: -5px; right: -5px;
+    background: var(--verde); color: #000;
+    font-size: 8px; font-weight: 700; border-radius: 10px;
+    padding: 1px 4px; line-height: 1.4;
+  }
+  .mes-tab.planif .mes-badge { background: var(--amarillo); }
+
+  .hist-info {
+    margin-top: 10px; padding: 8px 12px;
+    background: var(--surface2); border-radius: 7px;
+    font-size: 11px; color: var(--text-muted);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .hist-info strong { color: var(--text); }
+  .hist-interv-lista { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
+  .hist-interv-chip {
+    font-size: 10px; padding: 3px 8px; border-radius: 4px;
+    border: 1px solid var(--verde-border); background: var(--verde-bg); color: var(--verde);
+  }
+  .hist-interv-chip.planif {
+    border-color: var(--amarillo-border); background: var(--amarillo-bg); color: var(--amarillo);
+  }
+
+  /* HISTORIAL — tabla de intervenciones */
+  .interv-wrap {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 16px; margin-bottom: 20px; overflow-x: auto;
+  }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  thead th {
+    text-align: left; padding: 6px 10px; font-size: 10px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-muted);
+    border-bottom: 1px solid var(--border);
+  }
+  tbody td { padding: 7px 10px; border-bottom: 1px solid rgba(255,255,255,0.04); vertical-align: middle; }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:hover td { background: var(--surface2); }
+
+  .badge-estado { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 10px; font-weight: 600; }
+  .badge-ejecutado   { background: var(--verde-bg);   color: var(--verde);   border: 1px solid var(--verde-border); }
+  .badge-planificada { background: var(--amarillo-bg); color: var(--amarillo); border: 1px solid var(--amarillo-border); }
+
+  /* DETALLE HILO MODAL */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+    z-index: 200; display: none; align-items: center; justify-content: center;
+    padding: 20px;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; width: 100%; max-width: 700px; max-height: 85vh;
+    overflow-y: auto; padding: 22px;
+  }
+  .modal-header {
+    display: flex; justify-content: space-between; align-items: flex-start;
+    margin-bottom: 16px;
+  }
+  .modal-title { font-size: 15px; font-weight: 700; }
+  .modal-sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+  .modal-close {
+    background: none; border: none; color: var(--text-muted);
+    font-size: 18px; cursor: pointer; line-height: 1; padding: 2px 6px;
+  }
+  .modal-close:hover { color: var(--text); }
+
+  .hilo-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 6px;
+  }
+  .hilo-chip {
+    border-radius: 5px; padding: 5px 6px;
+    font-size: 10px; font-family: var(--mono);
+    border: 1px solid;
+    text-align: center; line-height: 1.4;
+  }
+  .hilo-chip.ok { background: var(--verde-bg); border-color: var(--verde-border); color: var(--verde); }
+  .hilo-chip.caido { background: var(--rojo-bg); border-color: var(--rojo-border); color: #fca5a5; }
+  .hilo-chip.ocupado { background: var(--amarillo-bg); border-color: var(--amarillo-border); color: var(--amarillo); }
+  .hilo-chip.atenuado { background: var(--naranja-bg); border-color: var(--naranja-border); color: var(--naranja); }
+  .hilo-num { font-weight: 700; font-size: 9px; color: var(--text-muted); }
+
+  .modal-stats {
+    display: grid; grid-template-columns: repeat(4,1fr); gap: 10px;
+    margin-bottom: 16px;
+  }
+  .mstat { background: var(--surface2); border-radius: 6px; padding: 10px 12px; text-align: center; }
+  .mstat-val { font-size: 20px; font-weight: 700; font-family: var(--mono); }
+  .mstat-lbl { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
+
+  footer {
+    text-align: center; font-size: 10px; color: var(--text-dim);
+    padding: 20px; border-top: 1px solid var(--border);
+    font-family: var(--mono);
+  }
+</style>
 </head>
 <body>
-    <div class="container">
-        <!-- Header -->
-        <div class="header">
-            <h1>📡 Estado de Hilos de Rutas Interurbanas</h1>
-            <p>Dashboard integral de disponibilidad y estado de infraestructura de fibra óptica</p>
-        </div>
 
-        <!-- KPI Grid -->
-        <div class="kpi-grid">
-            <div class="kpi-card kpi-rutas">
-                <div class="kpi-label">Total de Rutas</div>
-                <div class="kpi-value">41</div>
-                <div class="kpi-unit">rutas monitoreadas</div>
-            </div>
-
-            <div class="kpi-card kpi-disponibles">
-                <div class="kpi-label">Hilos Disponibles</div>
-                <div class="kpi-value">1,071</div>
-                <div class="kpi-unit">hilos nodo-nodo</div>
-            </div>
-
-            <div class="kpi-card kpi-porcentaje">
-                <div class="kpi-label">Disponibilidad General</div>
-                <div class="kpi-value">52.86%</div>
-                <div class="kpi-unit">del total de hilos</div>
-            </div>
-
-            <div class="kpi-card kpi-recuperar">
-                <div class="kpi-label">Hilos por Recuperar</div>
-                <div class="kpi-value">879</div>
-                <div class="kpi-unit">hilos caídos</div>
-            </div>
-
-            <div class="kpi-card kpi-verde kpi-hover">
-                <div class="kpi-label">Rutas > 75% Disponibilidad</div>
-                <div class="kpi-value">8</div>
-                <div class="kpi-unit">15% del total</div>
-                <div class="kpi-tooltip">
-                    <div class="kpi-tooltip-title">Rutas (8)</div>
-                    <ul><li>CUE-Bellavista Cuenca (A)/Gualaceo (E)-F01-BB (100.00%)</li><li>GLCO-Gualaceo (E)/Ñuñurco (NE)-F01-BB (100.00%)</li><li>SISB-Pucara (E)- Santa Isabel (O)/ El Guabo(O)-F02-D02-DB (100.00%)</li><li>SJB-San Juan Bosco (E)/Limon Indanza (NE)-F01-BB (91.67%)</li><li>SISB-San Fernando (E)- Santa Isabel (O)/ El Guabo(O)-F02-D01-DB (89.58%)</li><li>CNR-Zhud (O)/Suscal (E)-F02-BB (87.50%)</li><li>MCS-Sucua (E)/Logroño  (NE)-F01-BB (87.50%)</li><li>GLCO-Gualaceo (E)/Chordeleg (E)-F01-BB (85.42%)</li></ul>
-                </div>
-            </div>
-
-            <div class="kpi-card kpi-amarillo kpi-hover">
-                <div class="kpi-label">Rutas 50% - 75% Disponibilidad</div>
-                <div class="kpi-value">7</div>
-                <div class="kpi-unit">13% del total</div>
-                <div class="kpi-tooltip">
-                    <div class="kpi-tooltip-title">Rutas (7)</div>
-                    <ul><li>CUE-Bellavista Cuenca (A)/Molleturo (O)-F01-BB (75.00%)</li><li>CNR-Colon Cañar (NE)/Tambo cue (NE)-F02-BB (72.92%)</li><li>CNR-Hostal Azogues (E)/Paute (E)-F01-BB (70.83%)</li><li>MDZ-Mendez SDH (O)/Limon Indanza (NE)-F01-BB (70.83%)</li><li>MDZ-Tiwintza (E)/Mendez SDH (O)-F01-BB (66.67%)</li><li>MCS-Santa Ana cue (E)/Macas sdh (O)-Chuwitayo (E)-F01-D01-DB (65.22%)</li><li>GLQ-Gualaquiza (O)/San Juan Bosco (E)-F01-BB (64.58%)</li></ul>
-                </div>
-            </div>
-
-            <div class="kpi-card kpi-naranja kpi-hover">
-                <div class="kpi-label">Rutas 25% - 50% Disponibilidad</div>
-                <div class="kpi-value">12</div>
-                <div class="kpi-unit">23% del total</div>
-                <div class="kpi-tooltip">
-                    <div class="kpi-tooltip-title">Rutas (12)</div>
-                    <ul><li>CNR-Zhud (O)/Tambo cue (NE)-F01-BB (50.00%)</li><li>LIM-B-Limon Indanza (E)/Gualaquiza (O)-F01-BB (50.00%)</li><li>MDZ-Mendez SDH (O)/Sucua (E)-F01-BB (50.00%)</li><li>CNR-Colon Cañar (NE)/Tambo cue (NE)-F01-BB (47.92%)</li><li>MDZ-Mendez SDH (O)/Pahuancay (O)-F01-BB (47.73%)</li><li>CHLG-Chordeleg (E)/Sigsig (E)-F01-BB (45.83%)</li><li>GLCO-Gualaceo (E)/Bellavista Cuenca (A)-Sigsig (E)-F02-BB (45.83%)</li><li>MCS-Taisha (E)-Macas sdh (O)/Chuwitayo(E)-F01-BB (45.45%)</li><li>MCS-Logroño (E)/Santa Ana cue (E)-F01-BB (45.45%)</li><li>CUE-Villaflor (NE) - Bellavista Cuenca(A)/Colon Cañar (NE)-F01-DB (41.67%)</li><li>GIR-Giron (NE)/San Fernando  (E)-F01-BB (37.50%)</li><li>PAU-Villaflor (NE)/Paute(O)-F01-BB (33.33%)</li></ul>
-                </div>
-            </div>
-
-            <div class="kpi-card kpi-rojo kpi-hover">
-                <div class="kpi-label">Rutas < 25% Disponibilidad</div>
-                <div class="kpi-value">14</div>
-                <div class="kpi-unit">26% del total</div>
-                <div class="kpi-tooltip">
-                    <div class="kpi-tooltip-title">Rutas (14)</div>
-                    <ul><li>GLQ-Gualaquiza  (O)/Granadilla (O)-F01-BB (0.00%)</li><li>SIG-Sigsig (E)/Granadilla (O)-F01-BB (0.00%)</li><li>CNR-La Troncal 2 (E)/Zhud (O)-F01-BB (2.08%)</li><li>CUE-Bellavista Cuenca (A)/Colon Cañar (NE)-F02-BB (4.17%)</li><li>CNR-Javier Loyola(NE)- Bellavista Cuenca (A) / Colon Cañar (NE)-F01-D02-DB (4.17%)</li><li>GLCO-Gualaceo (E)/Bellavista Cuenca (A)-Pahuancay (O)-F01-BB (6.25%)</li><li>CUE-Bellavista Cuenca (A)/Oña (O)-F01-BB (8.33%)</li><li>CUE-Bellavista Cuenca (A)/Giron (NE)-F01-BB (10.42%)</li><li>CUE-Ñuñurco (NE)-Bellavista Cuenca(A)/Pahuancay (O)-F01-DB (11.54%)</li><li>CUE-Bellavista Cuenca (A)/Sigsig (E)-F01-BB (14.58%)</li><li>NBON-Nabon (E)-Oña (O)/Bellavista Cuenca (A)-F01-D01-DB (20.83%)</li><li>SISB-Santa Isabel (O)/ Pucara Santa Isabel (E)-F01-BB (20.83%)</li><li>CNR-Gualleturo cue (E)/La Troncal 2 (O)-Zhud (O)-F01-D01-DB (22.92%)</li><li>GLCO-Gualaceo (E)-Limon Indanza (E)/San Juan Bosco (E)/F01-D01-DB (22.92%)</li></ul>
-                </div>
-            </div>
-        </div>
-
-        <h2 class="section-title">🗺️ Mapa de Rutas - Codificación por Disponibilidad</h2>
-
-        <div class="mapa-wrapper">
-            <div class="legend">
-                <div class="legend-title">Leyenda de Colores</div>
-                <div class="legend-items">
-                    <div class="legend-item">
-                        <div class="legend-color" style="background: #16a34a;"></div>
-                        <div class="legend-label"><strong>Verde:</strong> Disponibilidad > 75%</div>
-                    </div>
-                    <div class="legend-item">
-                        <div class="legend-color" style="background: #eab308;"></div>
-                        <div class="legend-label"><strong>Amarillo:</strong> 50% - 75%</div>
-                    </div>
-                    <div class="legend-item">
-                        <div class="legend-color" style="background: #f97316;"></div>
-                        <div class="legend-label"><strong>Naranja:</strong> 25% - 50%</div>
-                    </div>
-                    <div class="legend-item">
-                        <div class="legend-color" style="background: #dc2626;"></div>
-                        <div class="legend-label"><strong>Rojo:</strong> < 25%</div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="map-container">
-                <div id="map"></div>
-            </div>
-        </div>
-
-        <!-- Info Box -->
-        <div class="info-box">
-            <p>
-                <strong>ℹ️ Nota:</strong> Las rutas con disponibilidad menor al 25% requieren atención inmediata. 
-                Posicione el cursor sobre cada ruta para ver detalles de hilos ocupados, disponibles (NODO-NODO) y por recuperar.
-            </p>
-        </div>
-
-        <!-- Rutas Críticas -->
-        <div class="rutas-criticas-container">
-            <h2 class="section-title">⚠️ Rutas con Disponibilidad < 25%</h2>
-            
-            <div class="rutas-grid" id="rutasGrid">
-                <!-- Las tarjetas se cargarán dinámicamente con JavaScript -->
-            </div>
-        </div>
-
-        <!-- Mapa -->
-        <!-- Plan de Acción -->
-        <div class="plan-accion-container">
-            <h2 class="section-title">🛠️ Plan de Acción - Recuperación de Hilos (3 Meses)</h2>
-
-            <div class="info-box">
-                <p>
-                    <strong>ℹ️ Objetivo:</strong> Recuperar los hilos caídos en las rutas más críticas mediante trabajos de bajo impacto,
-                    ejecutando <strong>una intervención cada 15 días</strong> a lo largo de un plazo de <strong>3 meses</strong>.
-                    El plan abarca únicamente las rutas con <strong>disponibilidad menor al 25%</strong>, ordenadas de mayor a menor
-                    criticidad, cubriendo un total de <strong>14 rutas</strong> a lo largo de 6 quincenas.
-                </p>
-            </div>
-
-            <div class="plan-timeline">
-                <div class="quincena-card">
-                    <div class="quincena-header">
-                        <div class="quincena-titulo">📅 Quincena 1 de 6</div>
-                        <div class="quincena-fechas">1 Jul 2026 — 15 Jul 2026</div>
-                    </div>
-                    <div class="quincena-rutas">
-                        <div class="plan-ruta-item">
-                            <div class="plan-orden">1</div>
-                            <div class="plan-ruta-nombre">SIG-Sigsig (E)/Granadilla (O)-F01-BB</div>
-                            <div class="plan-ruta-provincia">AZUAY</div>
-                            <div class="plan-ruta-disp" style="background: #dc2626;">0.00%</div>
-                            <div class="plan-ruta-hilos">11 hilos x recuperar</div>
-                        </div>
-                        <div class="plan-ruta-item">
-                            <div class="plan-orden">2</div>
-                            <div class="plan-ruta-nombre">GLQ-Gualaquiza  (O)/Granadilla (O)-F01-BB</div>
-                            <div class="plan-ruta-provincia">MORONA SANTIAGO</div>
-                            <div class="plan-ruta-disp" style="background: #dc2626;">0.00%</div>
-                            <div class="plan-ruta-hilos">10 hilos x recuperar</div>
-                        </div>
-                        <div class="plan-ruta-item">
-                            <div class="plan-orden">3</div>
-                            <div class="plan-ruta-nombre">CNR-La Troncal 2 (E)/Zhud (O)-F01-BB</div>
-                            <div class="plan-ruta-provincia">CAÑAR</div>
-                            <div class="plan-ruta-disp" style="background: #dc2626;">2.08%</div>
-                            <div class="plan-ruta-hilos">40 hilos x recuperar</div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="quincena-card">
-                    <div class="quincena-header">
-                        <div class="quincena-titulo">📅 Quincena 2 de 6</div>
-                        <div class="quincena-fechas">16 Jul 2026 — 30 Jul 2026</div>
-                    </div>
-                    <div class="quincena-rutas">
-                        <div class="plan-ruta-item">
-                            <div class="plan-orden">4</div>
-                            <div class="plan-ruta-nombre">CNR-Javier Loyola(NE)- Bellavista Cuenca (A) / Colon Cañar (NE)-F01-D02-DB</div>
-                            <div class="plan-ruta-provincia">CAÑAR</div>
-                            <div class="plan-ruta-disp" style="background: #dc2626;">4.17%</div>
-                            <div class="plan-ruta-hilos">42 hilos x recuperar</div>
-                        </div>
-                        <div class="plan-ruta-item">
-                            <div class="plan-orden">5</div>
-                            <div class="plan-ruta-nombre">CUE-Bellavista Cuenca (A)/Colon Cañar (NE)-F02-BB</div>
-                            <div class="plan-ruta-provincia">CUENCA</div>
-                            <div class="plan-ruta-disp" style="background: #dc2626;">4.17%</div>
-                            <div class="plan-ruta-hilos">33 hilos x recuperar</div>
-                        </div>
-                        <div class="plan-ruta-item">
-                            <div class="plan-orden">6</div>
-                            <div class="plan-ruta-nombre">GLCO-Gualaceo (E)/Bellavista Cuenca (A)-Pahuancay (O)-F01-BB</div>
-                            <div class="plan-ruta-provincia">AZUAY</div>
-                            <div class="plan-ruta-disp" style="background: #dc2626;">6.25%</div>
-                            <div class="plan-ruta-hilos">44 hilos x recuperar</div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="quincena-card">
-                    <div class="quincena-header">
-                        <div class="quincena-titulo">📅 Quincena 3 de 6</div>
-                        <div class="quincena-fechas">31 Jul 2026 — 14 Ago 2026</div>
-                    </div>
-                    <div class="quincena-rutas">
-                        <div class="plan-ruta-item">
-                            <div class="plan-orden">7</div>
-                            <div class="plan-ruta-nombre">CUE-Bellavista Cuenca (A)/Oña (O)-F01-BB</div>
-                            <div class="plan-ruta-provincia">CUENCA</div>
-                            <div class="plan-ruta-disp" style="background: #dc2626;">8.33%</div>
-                            <div class="plan-ruta-hilos">33 hilos x recuperar</div>
-                        </div>
-                        <div class="plan-ruta-item">
-                            <div class="plan-orden">8</div>
-                            <div class="plan-ruta-nombre">CUE-Bellavista Cuenca (A)/Giron (NE)-F01-BB</div>
-                            <div class="plan-ruta-provincia">CUENCA</div>
-                            <div class="plan-ruta-disp" style="background: #dc2626;">10.42%</div>
-                            <div class="plan-ruta-hilos">31 hilos x recuperar</div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="quincena-card">
-                    <div class="quincena-header">
-                        <div class="quincena-titulo">📅 Quincena 4 de 6</div>
-                        <div class="quincena-fechas">15 Ago 2026 — 29 Ago 2026</div>
-                    </div>
-                    <div class="quincena-rutas">
-                        <div class="plan-ruta-item">
-                            <div class="plan-orden">9</div>
-                            <div class="plan-ruta-nombre">CUE-Ñuñurco (NE)-Bellavista Cuenca(A)/Pahuancay (O)-F01-DB</div>
-                            <div class="plan-ruta-provincia">CUENCA</div>
-                            <div class="plan-ruta-disp" style="background: #dc2626;">11.54%</div>
-                            <div class="plan-ruta-hilos">21 hilos x recuperar</div>
-                        </div>
-                        <div class="plan-ruta-item">
-                            <div class="plan-orden">10</div>
-                            <div class="plan-ruta-nombre">CUE-Bellavista Cuenca (A)/Sigsig (E)-F01-BB</div>
-                            <div class="plan-ruta-provincia">CUENCA</div>
-                            <div class="plan-ruta-disp" style="background: #dc2626;">14.58%</div>
-                            <div class="plan-ruta-hilos">27 hilos x recuperar</div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="quincena-card">
-                    <div class="quincena-header">
-                        <div class="quincena-titulo">📅 Quincena 5 de 6</div>
-                        <div class="quincena-fechas">30 Ago 2026 — 13 Sep 2026</div>
-                    </div>
-                    <div class="quincena-rutas">
-                        <div class="plan-ruta-item">
-                            <div class="plan-orden">11</div>
-                            <div class="plan-ruta-nombre">NBON-Nabon (E)-Oña (O)/Bellavista Cuenca (A)-F01-D01-DB</div>
-                            <div class="plan-ruta-provincia">AZUAY</div>
-                            <div class="plan-ruta-disp" style="background: #dc2626;">20.83%</div>
-                            <div class="plan-ruta-hilos">36 hilos x recuperar</div>
-                        </div>
-                        <div class="plan-ruta-item">
-                            <div class="plan-orden">12</div>
-                            <div class="plan-ruta-nombre">SISB-Santa Isabel (O)/ Pucara Santa Isabel (E)-F01-BB</div>
-                            <div class="plan-ruta-provincia">AZUAY</div>
-                            <div class="plan-ruta-disp" style="background: #dc2626;">20.83%</div>
-                            <div class="plan-ruta-hilos">35 hilos x recuperar</div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="quincena-card">
-                    <div class="quincena-header">
-                        <div class="quincena-titulo">📅 Quincena 6 de 6</div>
-                        <div class="quincena-fechas">14 Sep 2026 — 28 Sep 2026</div>
-                    </div>
-                    <div class="quincena-rutas">
-                        <div class="plan-ruta-item">
-                            <div class="plan-orden">13</div>
-                            <div class="plan-ruta-nombre">GLCO-Gualaceo (E)-Limon Indanza (E)/San Juan Bosco (E)/F01-D01-DB</div>
-                            <div class="plan-ruta-provincia">AZUAY</div>
-                            <div class="plan-ruta-disp" style="background: #dc2626;">22.92%</div>
-                            <div class="plan-ruta-hilos">37 hilos x recuperar</div>
-                        </div>
-                        <div class="plan-ruta-item">
-                            <div class="plan-orden">14</div>
-                            <div class="plan-ruta-nombre">CNR-Gualleturo cue (E)/La Troncal 2 (O)-Zhud (O)-F01-D01-DB</div>
-                            <div class="plan-ruta-provincia">CAÑAR</div>
-                            <div class="plan-ruta-disp" style="background: #dc2626;">22.92%</div>
-                            <div class="plan-ruta-hilos">35 hilos x recuperar</div>
-                        </div>
-                    </div>
-                </div>
-
-            </div>
-        </div>
-
-        <div class="recordatorios-box">
-            <div class="recordatorios-titulo">⚠️ Recordatorios Importantes</div>
-            <ol>
-                <li>Todo trabajo debe realizarse mediante una <strong>Ventana de Mantenimiento (VM)</strong> de bajo impacto para la red.</li>
-                <li>Las VM no emergentes fueron <strong>suspendidas por motivo de la Copa Mundial de la FIFA</strong>.</li>
-                <li>Toda VM requiere <strong>autorización de GTN</strong>.</li>
-            </ol>
-        </div>
-
+<header>
+  <div class="logo-area">
+    <div class="logo-icon">🌐</div>
+    <div>
+      <div class="logo-text">TELCONET — Rutas Interurbanas</div>
+      <div class="logo-sub">Estado de hilos · Región Cuenca / Morona Santiago</div>
     </div>
+  </div>
+  <div class="header-meta">
+    Actualizado: <span id="reloj">--:--</span>
+  </div>
+</header>
 
-    <script>
-        // Datos completos de todas las rutas
-        const todasLasRutas = [
-            {"nombre": "ALA-Alausi SDH (O)/Zhud (O)-F01-BB", "provincia": "CAÑAR", "distancia": 46, "hilos_total": 48, "hilos_nodo": 39, "hilos_ocupados": 8, "hilos_recuperar": 1, "disponibilidad": 81.25, "coord_inicio": {"lat": -2.459628, "lng": -79.004278}, "coord_fin": {"lat": -2.347146, "lng": -78.934662}},
-            {"nombre": "CUE-Bellavista Cuenca (A)/ColonCañar (NE)-F01-BB", "provincia": "CUENCA", "distancia": 61, "hilos_total": 48, "hilos_nodo": 13, "hilos_ocupados": 13, "hilos_recuperar": 22, "disponibilidad": 27.08, "coord_inicio": {"lat": -2.88881554, "lng": -79.0126183}, "coord_fin": {"lat": -2.566028, "lng": -78.938088}},
-            {"nombre": "CUE-Bellavista Cuenca (A)/Colon Cañar (NE)-F02-BB", "provincia": "CUENCA", "distancia": 76, "hilos_total": 48, "hilos_nodo": 2, "hilos_ocupados": 13, "hilos_recuperar": 33, "disponibilidad": 4.17, "coord_inicio": {"lat": -2.88881554, "lng": -79.0126183}, "coord_fin": {"lat": -2.566028, "lng": -78.938088}},
-            {"nombre": "CUE-Bellavista Cuenca (A)/Giron (NE)-F01-BB", "provincia": "CUENCA", "distancia": 56, "hilos_total": 48, "hilos_nodo": 5, "hilos_ocupados": 12, "hilos_recuperar": 31, "disponibilidad": 10.42, "coord_inicio": {"lat": -2.88881554, "lng": -79.0126183}, "coord_fin": {"lat": -3.160695, "lng": -79.145868}},
-            {"nombre": "CUE-Bellavista Cuenca (A)/Gualaceo (E)-F01-BB", "provincia": "CUENCA", "distancia": 65, "hilos_total": 48, "hilos_nodo": 48, "hilos_ocupados": 0, "hilos_recuperar": 0, "disponibilidad": 100.0, "coord_inicio": {"lat": -2.88881554, "lng": -79.0126183}, "coord_fin": {"lat": -2.888778, "lng": -78.778145}},
-            {"nombre": "CUE-Bellavista Cuenca (A)/Pahuancay (O)-F01-BB", "provincia": "CUENCA", "distancia": 90, "hilos_total": 48, "hilos_nodo": 14, "hilos_ocupados": 7, "hilos_recuperar": 27, "disponibilidad": 29.17, "coord_inicio": {"lat": -2.88881554, "lng": -79.0126183}, "coord_fin": {"lat": -2.636242, "lng": -78.600918}},
-            {"nombre": "CUE-Bellavista Cuenca (A)/Oña (O)-F01-BB", "provincia": "CUENCA", "distancia": 113, "hilos_total": 48, "hilos_nodo": 4, "hilos_ocupados": 11, "hilos_recuperar": 33, "disponibilidad": 8.33, "coord_inicio": {"lat": -2.88881554, "lng": -79.0126183}, "coord_fin": {"lat": -3.470626, "lng": -79.154971}},
-            {"nombre": "CUE-Bellavista Cuenca (A)/Sigsig (E)-F01-BB", "provincia": "CUENCA", "distancia": 59, "hilos_total": 48, "hilos_nodo": 7, "hilos_ocupados": 14, "hilos_recuperar": 27, "disponibilidad": 14.58, "coord_inicio": {"lat": -2.88881554, "lng": -79.0126183}, "coord_fin": {"lat": -3.050488, "lng": -78.793128}},
-            {"nombre": "CUE-Bellavista Cuenca (A)/Molleturo (O)-F01-BB", "provincia": "CUENCA", "distancia": 67, "hilos_total": 48, "hilos_nodo": 36, "hilos_ocupados": 2, "hilos_recuperar": 10, "disponibilidad": 75.0, "coord_inicio": {"lat": -2.88881554, "lng": -79.0126183}, "coord_fin": {"lat": -2.765791, "lng": -79.39622}},
-            {"nombre": "CUE-Ñuñurco (NE)-Bellavista Cuenca(A)/Pahuancay (O)-F01-DB", "provincia": "CUENCA", "distancia": 42, "hilos_total": 5, "hilos_nodo": 3, "hilos_ocupados": 2, "hilos_recuperar": 21, "disponibilidad": 11.54, "coord_inicio": {"lat": -2.761497, "lng": -78.671846}, "coord_fin": {"lat": -2.760794, "lng": -78.677397}},
-            {"nombre": "CUE-Villaflor (NE) - Bellavista Cuenca(A)/Colon Cañar (NE)-F01-DB", "provincia": "CUENCA", "distancia": 17, "hilos_total": 12, "hilos_nodo": 5, "hilos_ocupados": 3, "hilos_recuperar": 4, "disponibilidad": 41.67, "coord_inicio": {"lat": -2.829142, "lng": -78.802993}, "coord_fin": {"lat": -2.833508, "lng": -78.878707}},
-            {"nombre": "CNR-Hostal Azogues (E)/Paute (E)-F01-BB", "provincia": "CAÑAR", "distancia": 28, "hilos_total": 48, "hilos_nodo": 34, "hilos_ocupados": 2, "hilos_recuperar": 12, "disponibilidad": 70.83, "coord_inicio": {"lat": -2.739365, "lng": -78.845337}, "coord_fin": {"lat": -2.77797, "lng": -78.766982}},
-            {"nombre": "CNR-Burgay (E)-Bellavista Cuenca (A)/Cañar (NE)/F01-D01-DB", "provincia": "CAÑAR", "distancia": 12, "hilos_total": 12, "hilos_nodo": 7, "hilos_ocupados": 5, "hilos_recuperar": 0, "disponibilidad": 58.33, "coord_inicio": {"lat": -2.708056, "lng": -78.893056}, "coord_fin": {"lat": -2.706042, "lng": -78.900608}},
-            {"nombre": "CNR-Colon Cañar (NE)/Tambo cue (NE)-F01-BB", "provincia": "CAÑAR", "distancia": 10, "hilos_total": 48, "hilos_nodo": 23, "hilos_ocupados": 8, "hilos_recuperar": 17, "disponibilidad": 47.92, "coord_inicio": {"lat": -2.566028, "lng": -78.938088}, "coord_fin": {"lat": -2.459628, "lng": -79.004278}},
-            {"nombre": "CNR-Colon Cañar (NE)/Tambo cue (NE)-F02-BB", "provincia": "CAÑAR", "distancia": 12, "hilos_total": 48, "hilos_nodo": 35, "hilos_ocupados": 2, "hilos_recuperar": 11, "disponibilidad": 72.92, "coord_inicio": {"lat": -2.566028, "lng": -78.938088}, "coord_fin": {"lat": -2.459628, "lng": -79.004278}},
-            {"nombre": "GTRO-Gualleturo cue (E)/La Troncal 2 (O)-Zhud (O)-F01-BB", "provincia": "CAÑAR", "distancia": 35, "hilos_total": 13, "hilos_nodo": 12, "hilos_ocupados": 1, "hilos_recuperar": 34, "disponibilidad": 25.53, "coord_inicio": {"lat": -2.524809, "lng": -79.130425}, "coord_fin": {"lat": -2.451404, "lng": -79.107239}},
-            {"nombre": "CNR-Gualleturo cue (E)/La Troncal 2 (O)-Zhud (O)-F01-D01-DB", "provincia": "CAÑAR", "distancia": 23, "hilos_total": 48, "hilos_nodo": 11, "hilos_ocupados": 2, "hilos_recuperar": 35, "disponibilidad": 22.92, "coord_inicio": {"lat": -2.524809, "lng": -79.130425}, "coord_fin": {"lat": -2.47346, "lng": -79.183197}},
-            {"nombre": "CNR-Javier Loyola(NE)- Bellavista Cuenca (A) / Colon Cañar (NE)-F01-D02-DB", "provincia": "CAÑAR", "distancia": 15, "hilos_total": 48, "hilos_nodo": 2, "hilos_ocupados": 4, "hilos_recuperar": 42, "disponibilidad": 4.17, "coord_inicio": null, "coord_fin": null},
-            {"nombre": "CNR-La Troncal 2 (E)/Zhud (O)-F01-BB", "provincia": "CAÑAR", "distancia": 80, "hilos_total": 48, "hilos_nodo": 1, "hilos_ocupados": 7, "hilos_recuperar": 40, "disponibilidad": 2.08, "coord_inicio": {"lat": -2.459628, "lng": -79.004278}, "coord_fin": {"lat": -2.42647, "lng": -79.344298}},
-            {"nombre": "CNR-Zhud (O)/Suscal (E)-F02-BB", "provincia": "CAÑAR", "distancia": 15, "hilos_total": 48, "hilos_nodo": 42, "hilos_ocupados": 2, "hilos_recuperar": 4, "disponibilidad": 87.5, "coord_inicio": {"lat": -2.459628, "lng": -79.004278}, "coord_fin": {"lat": -2.436544, "lng": -79.052309}},
-            {"nombre": "CNR-Zhud (O)/Tambo cue (NE)-F01-BB", "provincia": "CAÑAR", "distancia": 21, "hilos_total": 12, "hilos_nodo": 6, "hilos_ocupados": 6, "hilos_recuperar": 0, "disponibilidad": 50.0, "coord_inicio": {"lat": -2.459628, "lng": -79.004278}, "coord_fin": {"lat": -2.508243, "lng": -78.92756}},
-            {"nombre": "CNR-Zhud (O)/Colon Canar (NE)-F02-BB", "provincia": "CAÑAR", "distancia": 29, "hilos_total": 24, "hilos_nodo": 7, "hilos_ocupados": 1, "hilos_recuperar": 16, "disponibilidad": 29.17, "coord_inicio": {"lat": -2.459628, "lng": -79.004278}, "coord_fin": {"lat": -2.566028, "lng": -78.938088}},
-            {"nombre": "CHLG-Chordeleg (E)/Sigsig (E)-F01-BB", "provincia": "AZUAY", "distancia": 32, "hilos_total": 48, "hilos_nodo": 22, "hilos_ocupados": 8, "hilos_recuperar": 18, "disponibilidad": 45.83, "coord_inicio": {"lat": -2.920383, "lng": -78.774679}, "coord_fin": {"lat": -3.050488, "lng": -78.793128}},
-            {"nombre": "GIR-Giron (NE)/San Fernando  (E)-F01-BB", "provincia": "AZUAY", "distancia": 21, "hilos_total": 24, "hilos_nodo": 9, "hilos_ocupados": 0, "hilos_recuperar": 15, "disponibilidad": 37.5, "coord_inicio": {"lat": -3.160695, "lng": -79.145868}, "coord_fin": {"lat": -3.146065, "lng": -79.251742}},
-            {"nombre": "GLCO-Gualaceo (E)/Bellavista Cuenca (A)-Pahuancay (O)-F01-BB", "provincia": "AZUAY", "distancia": 0, "hilos_total": 48, "hilos_nodo": 3, "hilos_ocupados": 1, "hilos_recuperar": 44, "disponibilidad": 6.25, "coord_inicio": {"lat": -2.888778, "lng": -78.778145}, "coord_fin": {"lat": -2.864613, "lng": -78.778719}},
-            {"nombre": "GLCO-Gualaceo (E)/Bellavista Cuenca (A)-Sigsig (E)-F02-BB", "provincia": "AZUAY", "distancia": 25, "hilos_total": 48, "hilos_nodo": 22, "hilos_ocupados": 6, "hilos_recuperar": 20, "disponibilidad": 45.83, "coord_inicio": {"lat": -2.888778, "lng": -78.778145}, "coord_fin": {"lat": -3.000717, "lng": -78.829196}},
-            {"nombre": "GLCO-Gualaceo (E)/Chordeleg (E)-F01-BB", "provincia": "AZUAY", "distancia": 6, "hilos_total": 48, "hilos_nodo": 41, "hilos_ocupados": 7, "hilos_recuperar": 0, "disponibilidad": 85.42, "coord_inicio": {"lat": -2.888778, "lng": -78.778145}, "coord_fin": {"lat": -2.920383, "lng": -78.774679}},
-            {"nombre": "GLCO-Gualaceo (E)/Ñuñurco (NE)-F01-BB", "provincia": "AZUAY", "distancia": 50, "hilos_total": 48, "hilos_nodo": 48, "hilos_ocupados": 0, "hilos_recuperar": 0, "disponibilidad": 100.0, "coord_inicio": {"lat": -2.888778, "lng": -78.778145}, "coord_fin": {"lat": -2.760794, "lng": -78.677397}},
-            {"nombre": "GLCO-Gualaceo (E)-Limon Indanza (E)/San Juan Bosco (E)/F01-D01-DB", "provincia": "AZUAY", "distancia": 80, "hilos_total": 48, "hilos_nodo": 11, "hilos_ocupados": 0, "hilos_recuperar": 37, "disponibilidad": 22.92, "coord_inicio": {"lat": -2.888778, "lng": -78.778145}, "coord_fin": {"lat": -3.011413, "lng": -78.486741}},
-            {"nombre": "GLQ-Gualaquiza  (O)/Granadilla (O)-F01-BB", "provincia": "MORONA SANTIAGO", "distancia": 55, "hilos_total": 24, "hilos_nodo": 0, "hilos_ocupados": 14, "hilos_recuperar": 10, "disponibilidad": 0.0, "coord_inicio": {"lat": -3.403667, "lng": -78.5795}, "coord_fin": {"lat": -3.209508, "lng": -78.75297}},
-            {"nombre": "GLQ-Gualaquiza (O)/San Juan Bosco (E)-F01-BB", "provincia": "MORONA SANTIAGO", "distancia": 58, "hilos_total": 48, "hilos_nodo": 31, "hilos_ocupados": 5, "hilos_recuperar": 12, "disponibilidad": 64.58, "coord_inicio": {"lat": -3.403667, "lng": -78.5795}, "coord_fin": {"lat": -3.1202, "lng": -78.531256}},
-            {"nombre": "LIM-B-Limon Indanza (E)/Gualaquiza (O)-F01-BB", "provincia": "MORONA SANTIAGO", "distancia": 100, "hilos_total": 48, "hilos_nodo": 24, "hilos_ocupados": 0, "hilos_recuperar": 24, "disponibilidad": 50.0, "coord_inicio": {"lat": -2.966844, "lng": -78.432994}, "coord_fin": {"lat": -3.403667, "lng": -78.5795}},
-            {"nombre": "MCS-Macas sdh (O)/Sucua (E)-F01-BB", "provincia": "MORONA SANTIAGO", "distancia": 24, "hilos_total": 48, "hilos_nodo": 39, "hilos_ocupados": 6, "hilos_recuperar": 3, "disponibilidad": 81.25, "coord_inicio": {"lat": -2.312128, "lng": -78.122132}, "coord_fin": {"lat": -2.454722, "lng": -78.174167}},
-            {"nombre": "MCS-Santa Ana cue (E)/Macas sdh (O)-Chuwitayo (E)-F01-D01-DB", "provincia": "MORONA SANTIAGO", "distancia": 0, "hilos_total": 48, "hilos_nodo": 30, "hilos_ocupados": 9, "hilos_recuperar": 7, "disponibilidad": 65.22, "coord_inicio": {"lat": -2.298637, "lng": -78.102748}, "coord_fin": {"lat": -2.299458, "lng": -78.099963}},
-            {"nombre": "MCS-Taisha (E)-Macas sdh (O)/Chuwitayo(E)-F01-BB", "provincia": "MORONA SANTIAGO", "distancia": 0, "hilos_total": 48, "hilos_nodo": 20, "hilos_ocupados": 12, "hilos_recuperar": 12, "disponibilidad": 45.45, "coord_inicio": {"lat": -2.107495, "lng": -78.025602}, "coord_fin": {"lat": -2.118487, "lng": -77.794347}},
-            {"nombre": "MCS-Santa Ana cue (E )/Chuwitayo (E)-Macas sdh (O)-F02-BB", "provincia": "MORONA SANTIAGO", "distancia": 0, "hilos_total": 48, "hilos_nodo": 22, "hilos_ocupados": 6, "hilos_recuperar": 14, "disponibilidad": 52.38, "coord_inicio": {"lat": -2.298637, "lng": -78.102748}, "coord_fin": {"lat": -2.299458, "lng": -78.099963}},
-            {"nombre": "MCS-Macas sdh (O)/Chuwitayo(E)-F01-Bb", "provincia": "MORONA SANTIAGO", "distancia": 0, "hilos_total": 48, "hilos_nodo": 16, "hilos_ocupados": 8, "hilos_recuperar": 34, "disponibilidad": 27.59, "coord_inicio": {"lat": -2.312128, "lng": -78.122132}, "coord_fin": {"lat": -1.908174, "lng": -77.816879}},
-            {"nombre": "MCS-Sucua (E)/Logroño  (NE)-F01-BB", "provincia": "MORONA SANTIAGO", "distancia": 24, "hilos_total": 48, "hilos_nodo": 42, "hilos_ocupados": 6, "hilos_recuperar": 0, "disponibilidad": 87.5, "coord_inicio": {"lat": -2.454722, "lng": -78.174167}, "coord_fin": {"lat": -2.626537, "lng": -78.198827}},
-            {"nombre": "MCS-Logroño (E)/Santa Ana cue (E)-F01-BB", "provincia": "MORONA SANTIAGO", "distancia": 46, "hilos_total": 0, "hilos_nodo": 20, "hilos_ocupados": 12, "hilos_recuperar": 12, "disponibilidad": 45.45, "coord_inicio": {"lat": -2.626537, "lng": -78.198827}, "coord_fin": {"lat": -2.299458, "lng": -78.099963}},
-            {"nombre": "MDZ-Tiwintza (E)/Mendez SDH (O)-F01-BB", "provincia": "MORONA SANTIAGO", "distancia": 102, "hilos_total": 4, "hilos_nodo": 32, "hilos_ocupados": 4, "hilos_recuperar": 12, "disponibilidad": 66.67, "coord_inicio": {"lat": -3.052161, "lng": -78.005375}, "coord_fin": {"lat": -2.718751, "lng": -78.320473}},
-            {"nombre": "MDZ-Mendez SDH (O)/Limon Indanza (NE)-F01-BB", "provincia": "MORONA SANTIAGO", "distancia": 51, "hilos_total": 48, "hilos_nodo": 34, "hilos_ocupados": 5, "hilos_recuperar": 9, "disponibilidad": 70.83, "coord_inicio": {"lat": -2.718751, "lng": -78.320473}, "coord_fin": {"lat": -2.966844, "lng": -78.432994}},
-            {"nombre": "MDZ-Mendez SDH (O)/Sucua (E)-F01-BB", "provincia": "MORONA SANTIAGO", "distancia": 0, "hilos_total": 0, "hilos_nodo": 18, "hilos_ocupados": 4, "hilos_recuperar": 14, "disponibilidad": 50.0, "coord_inicio": {"lat": -2.718751, "lng": -78.320473}, "coord_fin": {"lat": -2.454722, "lng": -78.174167}},
-            {"nombre": "MDZ-Mendez SDH (O)/Pahuancay (O)-F01-BB", "provincia": "MORONA SANTIAGO", "distancia": 0, "hilos_total": 0, "hilos_nodo": 21, "hilos_ocupados": 6, "hilos_recuperar": 17, "disponibilidad": 47.73, "coord_inicio": {"lat": -2.718751, "lng": -78.320473}, "coord_fin": {"lat": -2.636242, "lng": -78.600918}},
-            {"nombre": "SJB-San Juan Bosco (E)/Limon Indanza (NE)-F01-BB", "provincia": "MORONA SANTIAGO", "distancia": 39, "hilos_total": 48, "hilos_nodo": 44, "hilos_ocupados": 4, "hilos_recuperar": 0, "disponibilidad": 91.67, "coord_inicio": {"lat": -3.1202, "lng": -78.531256}, "coord_fin": {"lat": -2.966844, "lng": -78.432994}},
-            {"nombre": "NBN-Nabon (E)-Bellavista Cuenca (A)/Oña (O)/F01-D02-DB", "provincia": "AZUAY", "distancia": 20, "hilos_total": 48, "hilos_nodo": 14, "hilos_ocupados": 7, "hilos_recuperar": 27, "disponibilidad": 29.17, "coord_inicio": {"lat": -3.340539, "lng": -79.06593}, "coord_fin": {"lat": -3.254734, "lng": -79.068823}},
-            {"nombre": "NBON-Nabon (E)-Oña (O)/Bellavista Cuenca (A)-F01-D01-DB", "provincia": "AZUAY", "distancia": 16, "hilos_total": 48, "hilos_nodo": 10, "hilos_ocupados": 2, "hilos_recuperar": 36, "disponibilidad": 20.83, "coord_inicio": {"lat": -3.340539, "lng": -79.06593}, "coord_fin": {"lat": -3.303679, "lng": -79.116726}},
-            {"nombre": "PAU-Villaflor (NE)/Paute(O)-F01-BB", "provincia": "AZUAY", "distancia": 15, "hilos_total": 12, "hilos_nodo": 4, "hilos_ocupados": 2, "hilos_recuperar": 6, "disponibilidad": 33.33, "coord_inicio": {"lat": -2.829142, "lng": -78.802993}, "coord_fin": {"lat": -2.77797, "lng": -78.766982}},
-            {"nombre": "SIG-Sigsig (E)/Granadilla (O)-F01-BB", "provincia": "AZUAY", "distancia": 45, "hilos_total": 24, "hilos_nodo": 0, "hilos_ocupados": 13, "hilos_recuperar": 11, "disponibilidad": 0.0, "coord_inicio": {"lat": -3.050488, "lng": -78.793128}, "coord_fin": {"lat": -3.209508, "lng": -78.75297}},
-            {"nombre": "SISB-Giron(E)/Santa Isabel(O)-F01-BB", "provincia": "AZUAY", "distancia": 31, "hilos_total": 36, "hilos_nodo": 22, "hilos_ocupados": 9, "hilos_recuperar": 5, "disponibilidad": 61.11, "coord_inicio": {"lat": -3.160695, "lng": -79.145868}, "coord_fin": {"lat": -3.274622, "lng": -79.313995}},
-            {"nombre": "SISB-Santa Isabel (O)/ El Guabo (E)-F01-BB", "provincia": "AZUAY", "distancia": 63, "hilos_total": 48, "hilos_nodo": 15, "hilos_ocupados": 12, "hilos_recuperar": 21, "disponibilidad": 31.25, "coord_inicio": {"lat": -3.274622, "lng": -79.313995}, "coord_fin": {"lat": -3.319347, "lng": -79.713051}},
-            {"nombre": "SISB-Santa Isabel (O)/ Pucara Santa Isabel (E)-F01-BB", "provincia": "AZUAY", "distancia": 51, "hilos_total": 48, "hilos_nodo": 10, "hilos_ocupados": 3, "hilos_recuperar": 35, "disponibilidad": 20.83, "coord_inicio": {"lat": -3.274622, "lng": -79.313995}, "coord_fin": {"lat": -3.222194, "lng": -79.470811}},
-            {"nombre": "SISB-San Fernando (E)- Santa Isabel (O)/ El Guabo(O)-F02-D01-DB", "provincia": "AZUAY", "distancia": 24, "hilos_total": 48, "hilos_nodo": 43, "hilos_ocupados": 1, "hilos_recuperar": 4, "disponibilidad": 89.58, "coord_inicio": {"lat": -3.246809, "lng": -79.236203}, "coord_fin": {"lat": -3.274622, "lng": -79.313995}},
-            {"nombre": "SISB-Pucara (E)- Santa Isabel (O)/ El Guabo(O)-F02-D02-DB", "provincia": "AZUAY", "distancia": 60, "hilos_total": 48, "hilos_nodo": 48, "hilos_ocupados": 0, "hilos_recuperar": 0, "disponibilidad": 100.0, "coord_inicio": {"lat": -3.222194, "lng": -79.470811}, "coord_fin": {"lat": -3.310133, "lng": -79.509439}},
-        ];
+<div id="tooltip">
+  <div class="tt-ruta" id="tt-ruta"></div>
+  <div class="tt-nodos" id="tt-nodos"></div>
+  <div class="tt-stats">
+    <div class="tt-stat"><span>Disponibles</span><span id="tt-disp"></span></div>
+    <div class="tt-stat"><span>Activos</span><span id="tt-act"></span></div>
+    <div class="tt-stat"><span>Total fibras</span><span id="tt-total"></span></div>
+    <div class="tt-stat"><span>Disponibilidad</span><span id="tt-pct"></span></div>
+  </div>
+</div>
 
-        // Función para obtener color según disponibilidad
-        function getColor(disponibilidad) {
-            if (disponibilidad > 75) return '#16a34a';      // Verde
-            if (disponibilidad > 50) return '#eab308';      // Amarillo
-            if (disponibilidad > 25) return '#f97316';      // Naranja
-            return '#dc2626';                                // Rojo
-        }
+<main>
 
-        // Cargar tarjetas de rutas críticas
-        function cargarRutasCriticas() {
-            const rutasCriticas = todasLasRutas.filter(r => r.disponibilidad < 25).sort((a, b) => a.disponibilidad - b.disponibilidad);
-            const grid = document.getElementById('rutasGrid');
-            
-            rutasCriticas.forEach(ruta => {
-                const card = document.createElement('div');
-                card.className = 'ruta-card';
-                card.innerHTML = `
-                    <div class="ruta-card-header">
-                        <div class="ruta-nombre">${ruta.disponibilidad === 0 ? '🚨' : '⚠️'} ${ruta.nombre}</div>
-                        <div class="ruta-provincia">${ruta.provincia}</div>
-                        <div class="disponibilidad-badge">${ruta.disponibilidad.toFixed(2)}%</div>
-                    </div>
-                    <div class="ruta-card-body">
-                        <div class="ruta-detail">
-                            <div class="ruta-detail-label">Hilos Ocupados</div>
-                            <div class="ruta-detail-value">${ruta.hilos_ocupados}</div>
-                        </div>
-                        <div class="ruta-detail">
-                            <div class="ruta-detail-label">Hilos Nodo-Nodo</div>
-                            <div class="ruta-detail-value">${ruta.hilos_nodo} <span>/${ruta.hilos_total}</span></div>
-                        </div>
-                        <div class="ruta-detail">
-                            <div class="ruta-detail-label">Hilos por Recuperar</div>
-                            <div class="ruta-detail-value">${ruta.hilos_recuperar}</div>
-                        </div>
-                    </div>
-                    <div class="hover-hint">👆 Pasa el cursor para ver detalles</div>
-                `;
-                grid.appendChild(card);
-            });
-        }
+  <!-- KPIs GLOBALES -->
+  <div class="kpi-row" id="kpi-row"></div>
 
-        // Inicializar mapa con TODAS las rutas
-        function initMap() {
-            const map = L.map('map').setView([-2.9, -78.6], 8);
-            
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '© OpenStreetMap contributors',
-                maxZoom: 19
-            }).addTo(map);
+  <!-- LEYENDA -->
+  <div class="leyenda-global">
+    <span>Estado:</span>
+    <div class="leg-chip" style="background:var(--verde-bg);border-color:var(--verde-border);color:var(--verde)">
+      <div class="leg-dot" style="background:var(--verde)"></div>75–100% Disponible
+    </div>
+    <div class="leg-chip" style="background:var(--amarillo-bg);border-color:var(--amarillo-border);color:var(--amarillo)">
+      <div class="leg-dot" style="background:var(--amarillo)"></div>50–75% Medio
+    </div>
+    <div class="leg-chip" style="background:var(--naranja-bg);border-color:var(--naranja-border);color:var(--naranja)">
+      <div class="leg-dot" style="background:var(--naranja)"></div>25–50% Bajo
+    </div>
+    <div class="leg-chip" style="background:var(--rojo-bg);border-color:var(--rojo-border);color:var(--rojo)">
+      <div class="leg-dot" style="background:var(--rojo)"></div>&lt;25% Crítico
+    </div>
+    <div class="leg-chip" style="background:var(--liberada-bg);border-color:rgba(56,189,248,0.3);color:var(--liberada)">
+      <div class="leg-dot" style="background:var(--liberada)"></div>Liberada
+    </div>
+  </div>
 
-            // Dibujar todas las rutas
-            todasLasRutas.forEach(ruta => {
-                if (ruta.coord_inicio && ruta.coord_fin) {
-                    const latlngs = [
-                        [ruta.coord_inicio.lat, ruta.coord_inicio.lng],
-                        [ruta.coord_fin.lat, ruta.coord_fin.lng]
-                    ];
-                    
-                    const color = getColor(ruta.disponibilidad);
-                    
-                    const polyline = L.polyline(latlngs, {
-                        color: color,
-                        weight: 3,
-                        opacity: 0.8,
-                        dashArray: ruta.disponibilidad < 25 ? '5, 5' : null
-                    }).bindPopup(`
-                        <strong>${ruta.nombre}</strong><br/>
-                        Provincia: ${ruta.provincia}<br/>
-                        Disponibilidad: <strong>${ruta.disponibilidad.toFixed(2)}%</strong><br/>
-                        Hilos: ${ruta.hilos_nodo}/${ruta.hilos_total}<br/>
-                        Distancia: ${ruta.distancia} km
-                    `).addTo(map);
-                }
-            });
-        }
+  <!-- MAPA -->
+  <div class="section-title">Mapa de rutas de fibra óptica</div>
+  <div class="map-container">
+    <svg id="mapa-svg" viewBox="0 0 900 580" xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
 
-        // Inicializar cuando carga la página
-        document.addEventListener('DOMContentLoaded', () => {
-            cargarRutasCriticas();
-            setTimeout(initMap, 100);
-        });
-    </script>
+  <!-- INDICADORES DE RANGO -->
+  <div class="section-title">Estado de disponibilidad por rango</div>
+  <div class="rangos-grid" id="rangos-grid"></div>
+  <div class="panel-rutas" id="panel-rutas">
+    <div class="panel-inner">
+      <div class="panel-titulo" id="panel-titulo"></div>
+      <div class="panel-grid" id="panel-grid"></div>
+    </div>
+  </div>
+
+  <!-- SELECTOR DE MES HISTÓRICO -->
+  <div class="section-title">Histórico de intervenciones</div>
+  <div class="hist-selector">
+    <div class="hist-top">
+      <div class="hist-label">Vista temporal
+        <span>Selecciona un mes para ver el estado de los hilos en ese período</span>
+      </div>
+      <div class="mes-tabs" id="mes-tabs"></div>
+    </div>
+    <div class="hist-info" id="hist-info" style="display:none"></div>
+  </div>
+
+  <!-- Tabla de intervenciones del mes -->
+  <div class="interv-wrap" id="interv-wrap" style="display:none">
+    <div style="font-size:13px;font-weight:600;margin-bottom:12px;" id="interv-titulo"></div>
+    <table id="tabla-interv">
+      <thead>
+        <tr>
+          <th>Semana</th><th>Trabajo</th><th>Ruta intervenida</th>
+          <th>Estado</th><th>Hilos recuperados</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+</main>
+
+<!-- MODAL DETALLE -->
+<div class="modal-overlay" id="modal-overlay" onclick="cerrarModal(event)">
+  <div class="modal" id="modal-content">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title" id="modal-title"></div>
+        <div class="modal-sub" id="modal-sub"></div>
+      </div>
+      <button class="modal-close" onclick="document.getElementById('modal-overlay').classList.remove('open')">✕</button>
+    </div>
+    <div class="modal-stats" id="modal-stats"></div>
+    <div style="font-size:11px;color:var(--text-muted);margin-bottom:10px;">Estado por hilo:</div>
+    <div class="hilo-grid" id="hilo-grid"></div>
+  </div>
+</div>
+
+<footer>TELCONET S.A. · Infraestructura Interurbana · Región Cuenca / Morona Santiago · Generado con datos operativos</footer>
+
+<script>
+// ─── DATOS ───────────────────────────────────────────────────────────────────
+
+const RUTAS = [
+  {n:"CUENCA - CANAR 01",inicio:"BELLAVISTA",fin:"COLON CAÑAR",lat1:-2.88882,lng1:-79.01262,lat2:-2.56605,lng2:-78.93819,fibra:48,activos:13,disp:13,aten:22,pct:0.2708,estado:"ACTIVA",prov:"AZUAY",cuad:"CUE INT 01"},
+  {n:"CUENCA - SIGSIG 01",inicio:"BELLAVISTA",fin:"SIGSIG",lat1:-2.88882,lng1:-79.01262,lat2:-3.05056,lng2:-78.79314,fibra:48,activos:14,disp:16,aten:18,pct:0.3333,estado:"ACTIVA",prov:"AZUAY",cuad:"CUE INT 01"},
+  {n:"GUALACEO - SAN JUAN 01",inicio:"GUALACEO",fin:"SAN JUAN",lat1:-2.88874,lng1:-78.77959,lat2:-3.05056,lng2:-78.79314,fibra:48,activos:6,disp:23,aten:19,pct:0.4792,estado:"ACTIVA",prov:"AZUAY",cuad:"CUE INT 01"},
+  {n:"CUENCA - PAHUANCAY 01",inicio:"BELLAVISTA",fin:"PAHUANCAY",lat1:-2.88882,lng1:-79.01262,lat2:-2.63619,lng2:-78.60204,fibra:48,activos:7,disp:14,aten:27,pct:0.2917,estado:"ACTIVA",prov:"AZUAY",cuad:"CUE INT 02"},
+  {n:"CUENCA - GIRON 01",inicio:"BELLAVISTA",fin:"GIRON",lat1:-2.88882,lng1:-79.01262,lat2:-3.16077,lng2:-79.14601,fibra:48,activos:12,disp:9,aten:27,pct:0.1875,estado:"ACTIVA",prov:"AZUAY",cuad:"CUE INT 02"},
+  {n:"CUENCA - GUALACEO 01",inicio:"BELLAVISTA",fin:"GUALACEO",lat1:-2.88882,lng1:-79.01262,lat2:-2.88874,lng2:-78.77959,fibra:48,activos:0,disp:48,aten:0,pct:1.0,estado:"LIBERADA",prov:"AZUAY",cuad:"CUE INT 02"},
+  {n:"CUENCA - JIMA 01",inicio:"BELLAVISTA",fin:"JIMA",lat1:-2.88882,lng1:-79.01262,lat2:-3.14298,lng2:-79.02134,fibra:48,activos:11,disp:4,aten:33,pct:0.0833,estado:"ACTIVA",prov:"AZUAY",cuad:"CUE INT 03"},
+  {n:"CUENCA - CANAR 02",inicio:"BELLAVISTA",fin:"COLON CAÑAR",lat1:-2.88882,lng1:-79.01262,lat2:-2.56605,lng2:-78.93819,fibra:48,activos:13,disp:13,aten:22,pct:0.2708,estado:"ACTIVA",prov:"AZUAY",cuad:"CUE INT 03"},
+  {n:"AZOGUES - PAUTE 01",inicio:"HOSTAL",fin:"PAUTE",lat1:-2.73959,lng1:-78.84528,lat2:-2.77629,lng2:-78.76040,fibra:48,activos:2,disp:34,aten:12,pct:0.7083,estado:"ACTIVA",prov:"CAÑAR",cuad:"CUE INT 03"},
+  {n:"GUALACEO - SIGSIG 01",inicio:"GUALACEO",fin:"SIGSIG",lat1:-2.92041,lng1:-78.77479,lat2:-3.05056,lng2:-78.79314,fibra:48,activos:7,disp:41,aten:0,pct:0.8542,estado:"ACTIVA",prov:"AZUAY",cuad:"CUE INT 04"},
+  {n:"VILLAFLOR - PAUTE 01",inicio:"MAN DER 12",fin:"PAUTE",lat1:-2.83352,lng1:-78.87874,lat2:-2.77629,lng2:-78.76040,fibra:24,activos:2,disp:10,aten:12,pct:0.4167,estado:"ACTIVA",prov:"AZUAY",cuad:"CUE INT 04"},
+  {n:"CUENCA - MOLLETURO 01",inicio:"BELLAVISTA",fin:"MOLLETURO",lat1:-2.88882,lng1:-79.01262,lat2:-2.76742,lng2:-79.39618,fibra:48,activos:2,disp:36,aten:10,pct:0.75,estado:"ACTIVA",prov:"AZUAY",cuad:"CUE INT 04"},
+  {n:"ZHUD - CAÑAR 01",inicio:"ZHUD",fin:"COLON CAÑAR",lat1:-2.45963,lng1:-79.00428,lat2:-2.56605,lng2:-78.93819,fibra:12,activos:6,disp:6,aten:0,pct:0.5,estado:"ACTIVA",prov:"CAÑAR",cuad:"ZHU INT 01"},
+  {n:"ZHUD - COMPUD 01",inicio:"ZHUD",fin:"CHUNCHI",lat1:-2.45963,lng1:-79.00428,lat2:-2.28877,lng2:-78.92027,fibra:48,activos:8,disp:39,aten:1,pct:0.8125,estado:"ACTIVA",prov:"CAÑAR",cuad:"ZHU INT 01"},
+  {n:"ZHUD - CAÑAR 02",inicio:"ZHUD",fin:"CAÑAR",lat1:-2.45963,lng1:-79.00428,lat2:-2.56605,lng2:-78.93818,fibra:24,activos:1,disp:7,aten:16,pct:0.2917,estado:"ACTIVA",prov:"CAÑAR",cuad:"ZHU INT 01"},
+  {n:"NABON - JIMA 01",inicio:"NABON",fin:"MANGA LA RAMADA",lat1:-3.34054,lng1:-79.06593,lat2:-3.25473,lng2:-79.06882,fibra:48,activos:7,disp:14,aten:27,pct:0.2917,estado:"ACTIVA",prov:"AZUAY",cuad:"ONA INT 01"},
+  {n:"NABON - OÑA 01",inicio:"NABON",fin:"MANGA LA PAZ",lat1:-3.34054,lng1:-79.06593,lat2:-3.31111,lng2:-79.13757,fibra:48,activos:11,disp:4,aten:33,pct:0.0833,estado:"ACTIVA",prov:"AZUAY",cuad:"ONA INT 01"},
+  {n:"ONA - JIMA 01",inicio:"JIMA",fin:"ONA",lat1:-3.14298,lng1:-79.02134,lat2:-3.47177,lng2:-79.15456,fibra:48,activos:11,disp:4,aten:33,pct:0.0833,estado:"ACTIVA",prov:"AZUAY",cuad:"ONA INT 01"},
+  {n:"GUALLETURO - TRONCAL 01",inicio:"GUALLETURO",fin:"TRONCAL",lat1:-2.52574,lng1:-79.13060,lat2:-2.43022,lng2:-79.33714,fibra:48,activos:1,disp:38,aten:9,pct:0.7917,estado:"ACTIVA",prov:"CAÑAR",cuad:"GLT INT 01"},
+  {n:"GUALLETURO - ZHUD 01",inicio:"GUALLETURO",fin:"MANGA DERIVACION",lat1:-2.52574,lng1:-79.13060,lat2:-2.46697,lng2:-79.10625,fibra:48,activos:2,disp:26,aten:20,pct:0.5417,estado:"ACTIVA",prov:"CAÑAR",cuad:"GLT INT 01"},
+  {n:"ZHUD - TRONCAL 01",inicio:"JAVIN",fin:"ZHUD",lat1:-2.46697,lng1:-79.10625,lat2:-2.45963,lng2:-79.00428,fibra:48,activos:7,disp:29,aten:12,pct:0.6042,estado:"ACTIVA",prov:"CAÑAR",cuad:"GLT INT 01"},
+  {n:"SANTA ISABEL - GIRON 01",inicio:"SANTA ISABEL",fin:"GIRON",lat1:-3.27513,lng1:-79.31399,lat2:-3.16077,lng2:-79.14601,fibra:48,activos:9,disp:35,aten:4,pct:0.7292,estado:"ACTIVA",prov:"AZUAY",cuad:"STA INT 01"},
+  {n:"GIRON - SAN FERNANDO 01",inicio:"GIRON",fin:"SAN FERNANDO",lat1:-3.16077,lng1:-79.14601,lat2:-3.14645,lng2:-79.25162,fibra:24,activos:6,disp:3,aten:15,pct:0.125,estado:"ACTIVA",prov:"AZUAY",cuad:"STA INT 01"},
+  {n:"SAN FERNANDO - SANTA ISABEL 01",inicio:"SAN FERNANDO",fin:"SANTA ISABEL DER",lat1:-3.14645,lng1:-79.25162,lat2:-3.24748,lng2:-79.23580,fibra:48,activos:1,disp:43,aten:4,pct:0.8958,estado:"ACTIVA",prov:"AZUAY",cuad:"STA INT 01"},
+  {n:"SANTA ISABEL - CASACAY 01",inicio:"SANTA ISABEL",fin:"CASACAY",lat1:-3.27513,lng1:-79.31399,lat2:-3.31060,lng2:-79.52983,fibra:48,activos:12,disp:15,aten:21,pct:0.3125,estado:"ACTIVA",prov:"AZUAY",cuad:"STA INT 01"},
+  {n:"SANTA ISABEL - PUCARA 01",inicio:"SANTA ISABEL",fin:"PUCARA",lat1:-3.27513,lng1:-79.31399,lat2:-3.22312,lng2:-79.47091,fibra:48,activos:3,disp:10,aten:35,pct:0.2083,estado:"ACTIVA",prov:"AZUAY",cuad:"STA INT 02"},
+  {n:"SANTA ISABEL - PUCARA 02",inicio:"SANTA ISABEL",fin:"PUCARA",lat1:-3.27513,lng1:-79.31399,lat2:-3.30963,lng2:-79.51054,fibra:48,activos:0,disp:48,aten:0,pct:1.0,estado:"LIBERADA",prov:"AZUAY",cuad:"STA INT 02"},
+  {n:"MACAS - CHUWITAYO 01",inicio:"MACAS",fin:"CHUWITAYO",lat1:-2.31206,lng1:-78.12151,lat2:-1.90897,lng2:-77.81399,fibra:48,activos:10,disp:23,aten:15,pct:0.4792,estado:"ACTIVA",prov:"MORONA SANTIAGO",cuad:"SUC INT 02"},
+  {n:"MACAS - MENDEZ 01",inicio:"MACAS",fin:"MENDEZ",lat1:-2.31206,lng1:-78.12151,lat2:-2.71979,lng2:-78.32010,fibra:48,activos:6,disp:39,aten:3,pct:0.8125,estado:"ACTIVA",prov:"MORONA SANTIAGO",cuad:"SUC INT 01"},
+  {n:"MENDEZ - TIWINZA 01",inicio:"MENDEZ",fin:"TIWINZA",lat1:-2.71979,lng1:-78.32010,lat2:-3.04850,lng2:-78.00558,fibra:48,activos:4,disp:32,aten:12,pct:0.6667,estado:"ACTIVA",prov:"MORONA SANTIAGO",cuad:"SUC INT 01"},
+  {n:"SANTA ANA - LOGROÑO 01",inicio:"SANTA ANA",fin:"LOGROÑO",lat1:-2.30385,lng1:-78.10007,lat2:-2.64565,lng2:-78.20460,fibra:48,activos:12,disp:24,aten:12,pct:0.5,estado:"ACTIVA",prov:"MORONA SANTIAGO",cuad:"SUC INT 02"},
+  {n:"MENDEZ - PAHUANCAY 01",inicio:"MENDEZ",fin:"PAHUANCAY",lat1:-2.71979,lng1:-78.32010,lat2:-2.63619,lng2:-78.60204,fibra:48,activos:6,disp:25,aten:17,pct:0.5208,estado:"ACTIVA",prov:"MORONA SANTIAGO",cuad:"SUC INT 01"},
+  {n:"MENDEZ - SAN JUAN BOSCO 01",inicio:"MENDEZ",fin:"SAN JUAN BOSCO",lat1:-2.71979,lng1:-78.32010,lat2:-3.12220,lng2:-78.53993,fibra:48,activos:4,disp:30,aten:14,pct:0.625,estado:"ACTIVA",prov:"MORONA SANTIAGO",cuad:"SUC INT 02"},
+  {n:"LIMON - GUALACEO 01",inicio:"LIMON",fin:"GUALACEO",lat1:-2.97108,lng1:-78.43200,lat2:-2.88874,lng2:-78.77959,fibra:24,activos:0,disp:24,aten:0,pct:1.0,estado:"ACTIVA",prov:"MORONA SANTIAGO",cuad:"CUE INT 04"},
+  {n:"LIMON - GUALAQUIZA 01",inicio:"LIMON",fin:"GUALAQUIZA",lat1:-2.97108,lng1:-78.43200,lat2:-3.40493,lng2:-78.57734,fibra:48,activos:0,disp:48,aten:0,pct:1.0,estado:"LIBERADA",prov:"MORONA SANTIAGO",cuad:"GQZ INT 01"},
+  {n:"GUALAQUIZA - SIGSIG 01",inicio:"GUALAQUIZA",fin:"SIGSIG",lat1:-3.40493,lng1:-78.57734,lat2:-3.05056,lng2:-78.79314,fibra:12,activos:9,disp:1,aten:2,pct:0.0833,estado:"ACTIVA",prov:"MORONA SANTIAGO",cuad:"GQZ INT 01"},
+  {n:"GUALAQUIZA - SAN JUAN BOSCO 01",inicio:"GUALAQUIZA",fin:"SAN JUAN BOSCO",lat1:-3.40493,lng1:-78.57734,lat2:-3.12220,lng2:-78.53993,fibra:48,activos:6,disp:40,aten:2,pct:0.8333,estado:"ACTIVA",prov:"MORONA SANTIAGO",cuad:"GQZ INT 01"},
+  {n:"GUALACEO - ÑUÑURCO 01",inicio:"GUALACEO",fin:"ÑUÑURCO",lat1:-2.88874,lng1:-78.77959,lat2:-2.76150,lng2:-78.67185,fibra:48,activos:2,disp:46,aten:0,pct:0.9583,estado:"ACTIVA",prov:"AZUAY",cuad:"CUE INT 02"},
+];
+
+const INTERVENCIONES = [
+  {sem:4,mes:7,trabajo:"Revisión de mangas",  estado:"EJECUTADO",  ruta:"CUE-Bellavista Cuenca (A)/Giron (NE)-F01-BB",                        hilos:5},
+  {sem:4,mes:7,trabajo:"Revisión de mangas",  estado:"EJECUTADO",  ruta:"SISB-Giron(E)/Santa Isabel(O)-F01-BB",                                hilos:5},
+  {sem:3,mes:7,trabajo:"Cambio de tramo",     estado:"EJECUTADO",  ruta:"CNR-Gualleturo cue (E)/Zhud (O)-La Troncal 2 (O)-F02-D02-DB",         hilos:24},
+  {sem:1,mes:8,trabajo:"Revisión de mangas",  estado:"EJECUTADO",  ruta:"CUE-Bellavista Cuenca (A)/Sigsig (E)-F01-BB",                          hilos:6},
+  {sem:2,mes:8,trabajo:"Estandarización ODF", estado:"EJECUTADO",  ruta:"PAU-Villaflor (NE)/Paute(O)-F01-BB",                                   hilos:12},
+  {sem:4,mes:8,trabajo:"Revisión de mangas",  estado:"EJECUTADO",  ruta:"CNR-Gualleturo cue (E)/La Troncal 2 (O)-Zhud (O)-F01-D01-DB",         hilos:36},
+  {sem:1,mes:9,trabajo:"Revisión de mangas",  estado:"PLANIFICADA",ruta:"CUE-Nabon (E)-Oña (O)/Bellavista Cuenca (A)-F01-B",                    hilos:null},
+  {sem:2,mes:9,trabajo:"Cambio de tramo",     estado:"EJECUTADO",  ruta:"CNR-La Troncal 2 (E)/Zhud (O)-F01-BB",                                 hilos:11},
+  {sem:3,mes:9,trabajo:"Cambio de tramo",     estado:"PLANIFICADA",ruta:"NBON-Nabon (E)-Oña (O)/Bellavista Cuenca (A)-F01-D01-DB",              hilos:null},
+];
+
+// ─── HELPERS ─────────────────────────────────────────────────────────────────
+
+function colorClass(pct, estado) {
+  if (estado === "LIBERADA") return "liberada";
+  if (pct >= 0.75) return "verde";
+  if (pct >= 0.50) return "amarillo";
+  if (pct >= 0.25) return "naranja";
+  return "rojo";
+}
+function colorHex(pct, estado) {
+  if (estado === "LIBERADA") return "var(--liberada)";
+  if (pct >= 0.75) return "var(--verde)";
+  if (pct >= 0.50) return "var(--amarillo)";
+  if (pct >= 0.25) return "var(--naranja)";
+  return "var(--rojo)";
+}
+
+// ─── MAPA SVG ────────────────────────────────────────────────────────────────
+
+function buildMap() {
+  const svg = document.getElementById('mapa-svg');
+
+  // Bounding box de coordenadas
+  const lats = RUTAS.flatMap(r => [r.lat1, r.lat2]);
+  const lngs = RUTAS.flatMap(r => [r.lng1, r.lng2]);
+  const minLat = Math.min(...lats), maxLat = Math.max(...lats);
+  const minLng = Math.min(...lngs), maxLng = Math.max(...lngs);
+
+  const W = 900, H = 580, PAD = 50;
+
+  function px(lng) { return PAD + (lng - minLng) / (maxLng - minLng) * (W - PAD*2); }
+  function py(lat) { return PAD + (lat - minLat) / (maxLat - minLat) * (H - PAD*2); }
+  // lat aumenta hacia abajo en SVG (sur = valor mayor en lat negativo)
+  // como las lats son negativas, minLat (más negativo) = más sur = debe ir abajo
+  function pyf(lat) { return H - (PAD + (lat - minLat) / (maxLat - minLat) * (H - PAD*2)); }
+
+  // Fondo
+  const rect = document.createElementNS('http://www.w3.org/2000/svg','rect');
+  rect.setAttribute('width',W); rect.setAttribute('height',H);
+  rect.setAttribute('fill','#e8eef4'); rect.setAttribute('rx','0');
+  svg.appendChild(rect);
+
+  // Dibujar líneas de rutas
+  RUTAS.forEach((r,i) => {
+    const x1=px(r.lng1), y1=pyf(r.lat1), x2=px(r.lng2), y2=pyf(r.lat2);
+    const cls = colorClass(r.pct, r.estado);
+    const colorMap = {verde:'#22c55e',amarillo:'#f59e0b',naranja:'#f97316',rojo:'#ef4444',liberada:'#38bdf8'};
+    const col = colorMap[cls];
+
+    // Línea de glow
+    const glow = document.createElementNS('http://www.w3.org/2000/svg','line');
+    glow.setAttribute('x1',x1); glow.setAttribute('y1',y1);
+    glow.setAttribute('x2',x2); glow.setAttribute('y2',y2);
+    glow.setAttribute('stroke',col);
+    glow.setAttribute('stroke-width','5');
+    glow.setAttribute('stroke-opacity','0.15');
+    glow.setAttribute('stroke-linecap','round');
+    svg.appendChild(glow);
+
+    // Línea principal
+    const line = document.createElementNS('http://www.w3.org/2000/svg','line');
+    line.setAttribute('x1',x1); line.setAttribute('y1',y1);
+    line.setAttribute('x2',x2); line.setAttribute('y2',y2);
+    line.setAttribute('stroke',col);
+    line.setAttribute('stroke-width', r.estado==='LIBERADA' ? '1.5' : '2.5');
+    line.setAttribute('stroke-linecap','round');
+    if (r.estado === 'LIBERADA') line.setAttribute('stroke-dasharray','6 4');
+    line.style.cursor = 'pointer';
+    line.dataset.idx = i;
+
+    line.addEventListener('mouseenter', (e) => showTooltip(e, r));
+    line.addEventListener('mousemove', moveTooltip);
+    line.addEventListener('mouseleave', hideTooltip);
+    line.addEventListener('click', () => abrirModal(r));
+    svg.appendChild(line);
+
+    // Punto inicio
+    const c1 = document.createElementNS('http://www.w3.org/2000/svg','circle');
+    c1.setAttribute('cx',x1); c1.setAttribute('cy',y1); c1.setAttribute('r','5');
+    c1.setAttribute('fill','#ffffff'); c1.setAttribute('stroke',col); c1.setAttribute('stroke-width','2');
+    svg.appendChild(c1);
+
+    // Punto fin
+    const c2 = document.createElementNS('http://www.w3.org/2000/svg','circle');
+    c2.setAttribute('cx',x2); c2.setAttribute('cy',y2); c2.setAttribute('r','4');
+    c2.setAttribute('fill',col); c2.setAttribute('opacity','0.8');
+    svg.appendChild(c2);
+  });
+
+  // Etiquetas de nodos principales (únicos)
+  const nodos = {};
+  RUTAS.forEach(r => {
+    const k1=`${r.lat1},${r.lng1}`, k2=`${r.lat2},${r.lng2}`;
+    if (!nodos[k1]) nodos[k1]={label:r.inicio,x:px(r.lng1),y:pyf(r.lat1)};
+    if (!nodos[k2]) nodos[k2]={label:r.fin,x:px(r.lng2),y:pyf(r.lat2)};
+  });
+  Object.values(nodos).forEach(nd => {
+    const t = document.createElementNS('http://www.w3.org/2000/svg','text');
+    t.setAttribute('x', nd.x + 7); t.setAttribute('y', nd.y + 4);
+    t.setAttribute('font-size','8'); t.setAttribute('fill','#475569');
+    t.setAttribute('font-family','Inter,sans-serif');
+    t.textContent = nd.label;
+    svg.appendChild(t);
+  });
+}
+
+// ─── TOOLTIP ─────────────────────────────────────────────────────────────────
+function showTooltip(e, r) {
+  const tt = document.getElementById('tooltip');
+  document.getElementById('tt-ruta').textContent = r.n;
+  document.getElementById('tt-nodos').textContent = `${r.inicio} → ${r.fin}`;
+  document.getElementById('tt-disp').textContent = r.disp;
+  document.getElementById('tt-act').textContent = r.activos;
+  document.getElementById('tt-total').textContent = r.fibra;
+  document.getElementById('tt-pct').textContent = r.estado==='LIBERADA' ? 'LIBERADA' : (r.pct*100).toFixed(1)+'%';
+  tt.style.display = 'block';
+  moveTooltip(e);
+}
+function moveTooltip(e) {
+  const tt = document.getElementById('tooltip');
+  const x = e.clientX + 14, y = e.clientY - 20;
+  tt.style.left = Math.min(x, window.innerWidth - 280)+'px';
+  tt.style.top = Math.max(10, y)+'px';
+}
+function hideTooltip() { document.getElementById('tooltip').style.display='none'; }
+
+// ─── KPIs GLOBALES ────────────────────────────────────────────────────────────
+function buildKPIs() {
+  const activas = RUTAS.filter(r=>r.estado!=='LIBERADA');
+  const totalFibra = activas.reduce((s,r)=>s+r.fibra,0);
+  const totalDisp  = activas.reduce((s,r)=>s+r.disp,0);
+  const criticas   = RUTAS.filter(r=>r.pct<0.25&&r.estado!=='LIBERADA').length;
+  const prom       = (totalDisp/totalFibra*100).toFixed(1);
+
+  const kpis = [
+    {lbl:'Total rutas',        val:RUTAS.length, sub:`${RUTAS.filter(r=>r.estado==='LIBERADA').length} liberadas`},
+    {lbl:'Disponibilidad global', val:prom+'%',  sub:`${totalDisp} / ${totalFibra} hilos`},
+    {lbl:'Rutas críticas (<25%)', val:criticas,  sub:'Requieren intervención urgente'},
+    {lbl:'Hilos por recuperar',   val:activas.reduce((s,r)=>s+r.aten,0), sub:'En rutas activas'},
+  ];
+  document.getElementById('kpi-row').innerHTML = kpis.map(k=>`
+    <div class="kpi-card">
+      <div class="kpi-label">${k.lbl}</div>
+      <div class="kpi-val">${k.val}</div>
+      <div class="kpi-sub">${k.sub}</div>
+    </div>
+  `).join('');
+}
+
+// ─── INDICADORES DE RANGO ─────────────────────────────────────────────────────
+// rangoActivo: estado del panel de rangos
+let rangoActivo = null;
+
+// buildRangos() reemplazada por renderRangosHist()
+
+// ─── MODAL ────────────────────────────────────────────────────────────────────
+// Datos de hilos por ruta (simplificado a estado general)
+const HILO_DATA = {
+  "CUENCA - CANAR 01": {hilos:[{e:"OCUPADO"},{e:"OCUPADO"},{e:"OK"},{e:"OK"},{e:"CAIDO"},{e:"CAIDO"},{e:"OK"},{e:"CAIDO"},{e:"OK"},{e:"OCUPADO"},{e:"CAIDO"},{e:"OCUPADO"},{e:"OK"},{e:"OK"},{e:"CAIDO"},{e:"OCUPADO"},{e:"OK"},{e:"OCUPADO"},{e:"OK"},{e:"OK"},{e:"OK"},{e:"OCUPADO"},{e:"OCUPADO"},{e:"CAIDO"},{e:"OCUPADO"},{e:"CAIDO"},{e:"OCUPADO"},{e:"OCUPADO"},{e:"CAIDO"},{e:"CAIDO"},{e:"OCUPADO"},{e:"OK"},{e:"OK"},{e:"CAIDO"},{e:"CAIDO"},{e:"OCUPADO"},{e:"OK"},{e:"CAIDO"},{e:"CAIDO"},{e:"CAIDO"},{e:"CAIDO"},{e:"CAIDO"},{e:"CAIDO"},{e:"CAIDO"},{e:"CAIDO"},{e:"CAIDO"},{e:"CAIDO"},{e:"OCUPADO"}]},
+};
+
+function abrirModal(r) {
+  if (typeof r === 'string') r = JSON.parse(r);
+  document.getElementById('modal-title').textContent = r.n;
+  document.getElementById('modal-sub').textContent = `${r.inicio} → ${r.fin} · ${r.prov} · ${r.cuad}`;
+
+  const pct = r.estado==='LIBERADA' ? 100 : Math.round(r.pct*100);
+  const col = colorHex(r.pct, r.estado);
+
+  document.getElementById('modal-stats').innerHTML = `
+    <div class="mstat"><div class="mstat-val" style="color:${col}">${pct}%</div><div class="mstat-lbl">Disponibilidad</div></div>
+    <div class="mstat"><div class="mstat-val" style="color:var(--verde)">${r.disp}</div><div class="mstat-lbl">Hilos OK</div></div>
+    <div class="mstat"><div class="mstat-val" style="color:var(--amarillo)">${r.activos}</div><div class="mstat-lbl">Con enlace</div></div>
+    <div class="mstat"><div class="mstat-val" style="color:var(--rojo)">${r.aten}</div><div class="mstat-lbl">Por recuperar</div></div>
+  `;
+
+  // Generar representación de hilos basada en los totales
+  const hilosGrid = document.getElementById('hilo-grid');
+  hilosGrid.innerHTML = '';
+  const totalHilos = r.fibra;
+  const okH = r.disp;
+  const ocH = r.activos;
+  const caH = r.aten;
+  let cnt = {ok:0, oc:0, ca:0};
+  for (let i=0; i<totalHilos; i++) {
+    let e, cls, lbl;
+    if (cnt.ok < okH) { e='OK'; cls='ok'; lbl='OK'; cnt.ok++; }
+    else if (cnt.oc < ocH) { e='OCUPADO'; cls='ocupado'; lbl='ENLACE'; cnt.oc++; }
+    else { e='CAIDO'; cls='caido'; lbl='CAÍDO'; cnt.ca++; }
+    const chip = document.createElement('div');
+    chip.className = `hilo-chip ${cls}`;
+    chip.innerHTML = `<div class="hilo-num">H${String(i+1).padStart(2,'0')}</div>${lbl}`;
+    hilosGrid.appendChild(chip);
+  }
+
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function cerrarModal(e) {
+  if (e.target === document.getElementById('modal-overlay'))
+    document.getElementById('modal-overlay').classList.remove('open');
+}
+
+// ─── HISTÓRICO POR MES ────────────────────────────────────────────────────────
+// Estado ACTUAL = septiembre (después de todas las intervenciones ejecutadas).
+// Para reconstruir meses anteriores, se RESTAN los hilos recuperados
+// en las intervenciones ejecutadas DESDE ese mes en adelante.
+
+// Mapa ruta-intervenida → nombre en RUTAS[]
+const RUTA_MATCH = {
+  'CUE-Bellavista Cuenca (A)/Giron (NE)-F01-BB':                        'CUENCA - GIRON 01',
+  'SISB-Giron(E)/Santa Isabel(O)-F01-BB':                               'SANTA ISABEL - GIRON 01',
+  'CNR-Gualleturo cue (E)/Zhud (O)-La Troncal 2 (O)-F02-D02-DB':       'GUALLETURO - ZHUD 01',
+  'CUE-Bellavista Cuenca (A)/Sigsig (E)-F01-BB':                        'CUENCA - SIGSIG 01',
+  'PAU-Villaflor (NE)/Paute(O)-F01-BB':                                 'VILLAFLOR - PAUTE 01',
+  'CNR-Gualleturo cue (E)/La Troncal 2 (O)-Zhud (O)-F01-D01-DB':       'GUALLETURO - TRONCAL 01',
+  'CNR-La Troncal 2 (E)/Zhud (O)-F01-BB':                               'ZHUD - TRONCAL 01',
+};
+
+// Mes actual = octubre 2025; meses con datos: 7=Jul, 8=Ago, 9=Sep + "Actual"
+const MESES_HIST = [
+  { mes: 7,    lbl: 'Julio',      sub: 'Antes de intervenciones Jul' },
+  { mes: 8,    lbl: 'Agosto',     sub: 'Después de interv. Jul' },
+  { mes: 9,    lbl: 'Septiembre', sub: 'Después de interv. Ago' },
+  { mes: null, lbl: 'Actual',     sub: 'Estado a la fecha (Sep ejecutado)' },
+];
+
+const MESES_NOM = ['','Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+let mesHistActivo = null; // null = estado actual
+
+// Calcula hilos de una ruta para un mes dado (restar acumulado desde ese mes)
+function dispParaMes(rutaNombre, mesDesde) {
+  const r = RUTAS.find(x => x.n === rutaNombre);
+  if (!r) return null;
+  if (mesDesde === null) return { disp: r.disp, aten: r.aten, fibra: r.fibra, pct: r.pct };
+
+  // Hilos recuperados en intervenciones EJECUTADAS >= mesDesde
+  let recuperados = 0;
+  INTERVENCIONES.forEach(i => {
+    if (i.estado !== 'EJECUTADO') return;
+    if (i.mes < mesDesde) return;
+    const match = RUTA_MATCH[i.ruta.trim()];
+    if (match === rutaNombre && i.hilos) recuperados += i.hilos;
+  });
+
+  const disp = Math.max(0, r.disp - recuperados);
+  const aten = Math.min(r.fibra, r.aten + recuperados);
+  const pct  = r.fibra > 0 ? disp / r.fibra : 0;
+  return { disp, aten, fibra: r.fibra, pct };
+}
+
+// Genera copia de RUTAS ajustada al mes
+function rutasParaMes(mes) {
+  return RUTAS.map(r => {
+    const hist = dispParaMes(r.n, mes);
+    if (!hist) return r;
+    return { ...r, disp: hist.disp, aten: hist.aten, pct: hist.pct };
+  });
+}
+
+function buildHistSelector() {
+  const tabs = document.getElementById('mes-tabs');
+  tabs.innerHTML = MESES_HIST.map(m => {
+    const intervsDelMes = INTERVENCIONES.filter(i => i.mes === m.mes);
+    const hayPlanif = intervsDelMes.some(i => i.estado === 'PLANIFICADA');
+    const totalH = intervsDelMes.filter(i=>i.estado==='EJECUTADO').reduce((s,i)=>s+(i.hilos||0),0);
+    const badge = totalH > 0 ? `<span class="mes-badge ${hayPlanif?'planif':''}">${totalH > 0 ? '+'+totalH : ''}</span>` : '';
+    return `<button class="mes-tab ${m.mes===null?'activo':''} ${hayPlanif?'planif':''}"
+      onclick="seleccionarMes(${m.mes===null?'null':m.mes}, this)"
+    >${badge}${m.lbl}</button>`;
+  }).join('');
+
+  renderHistorial(null);
+}
+
+function seleccionarMes(mes, btn) {
+  mesHistActivo = mes;
+  document.querySelectorAll('.mes-tab').forEach(b => b.classList.remove('activo'));
+  btn.classList.add('activo');
+  renderHistorial(mes);
+}
+
+function renderHistorial(mes) {
+  const config = MESES_HIST.find(m => m.mes === mes) || MESES_HIST[MESES_HIST.length-1];
+  const rutasHist = rutasParaMes(mes);
+
+  // Actualizar KPIs con datos históricos
+  renderKPIsHist(rutasHist, config);
+
+  // Actualizar mapa — recolorear líneas
+  actualizarMapaColor(rutasHist);
+
+  // Actualizar indicadores de rango
+  renderRangosHist(rutasHist);
+
+  // Mostrar info + tabla de intervenciones del mes
+  const infoEl = document.getElementById('hist-info');
+  const wrapEl = document.getElementById('interv-wrap');
+
+  if (mes === null) {
+    infoEl.style.display = 'none';
+    wrapEl.style.display = 'none';
+    return;
+  }
+
+  const intervsMes = INTERVENCIONES.filter(i => i.mes === mes);
+  const totalH = intervsMes.filter(i=>i.estado==='EJECUTADO').reduce((s,i)=>s+(i.hilos||0),0);
+
+  infoEl.style.display = 'flex';
+  infoEl.innerHTML = `
+    <div style="flex:1">
+      <div style="margin-bottom:6px;color:var(--text);font-weight:600;">
+        ${config.lbl} 2025 — ${config.sub}
+        ${totalH > 0 ? `· <span style="color:var(--verde)">+${totalH} hilos recuperados este mes</span>` : ''}
+      </div>
+      <div class="hist-interv-lista">
+        ${intervsMes.map(i => `
+          <span class="hist-interv-chip ${i.estado==='PLANIFICADA'?'planif':''}">
+            Sem ${i.sem} · ${i.trabajo} · ${i.ruta.trim().split('/')[0]}
+            ${i.hilos ? ' · +'+i.hilos+' hilos' : ''}
+          </span>
+        `).join('')}
+      </div>
+    </div>
+  `;
+
+  // Tabla
+  wrapEl.style.display = 'block';
+  document.getElementById('interv-titulo').textContent =
+    `Intervenciones de ${config.lbl} 2025`;
+  document.querySelector('#tabla-interv tbody').innerHTML = intervsMes.map(i => `
+    <tr>
+      <td style="color:var(--text-muted);font-family:var(--mono)">Sem ${i.sem}</td>
+      <td>${i.trabajo}</td>
+      <td style="font-size:11px">${i.ruta.trim()}</td>
+      <td><span class="badge-estado badge-${i.estado.toLowerCase()}">${i.estado}</span></td>
+      <td style="font-family:var(--mono);font-weight:600;color:${i.hilos?'var(--verde)':'var(--text-muted)'}">
+        ${i.hilos != null ? '+'+i.hilos : '—'}
+      </td>
+    </tr>
+  `).join('');
+}
+
+// KPIs ajustados al mes histórico
+function renderKPIsHist(rutasHist, config) {
+  const activas = rutasHist.filter(r=>r.estado!=='LIBERADA');
+  const totalFibra = activas.reduce((s,r)=>s+r.fibra,0);
+  const totalDisp  = activas.reduce((s,r)=>s+r.disp,0);
+  const criticas   = rutasHist.filter(r=>r.pct<0.25&&r.estado!=='LIBERADA').length;
+  const prom       = (totalDisp/totalFibra*100).toFixed(1);
+
+  document.getElementById('kpi-row').innerHTML = [
+    {lbl:'Total rutas',         val:rutasHist.length, sub:`${rutasHist.filter(r=>r.estado==='LIBERADA').length} liberadas`},
+    {lbl:'Disponibilidad global',val:prom+'%',         sub:`${totalDisp} / ${totalFibra} hilos`},
+    {lbl:'Rutas críticas (<25%)',val:criticas,          sub:'Requieren intervención'},
+    {lbl:'Hilos por recuperar', val:activas.reduce((s,r)=>s+r.aten,0), sub:`Estado: ${config.lbl}`},
+  ].map(k=>`
+    <div class="kpi-card">
+      <div class="kpi-label">${k.lbl}</div>
+      <div class="kpi-val">${k.val}</div>
+      <div class="kpi-sub">${k.sub}</div>
+    </div>
+  `).join('');
+}
+
+// Rangos ajustados al mes histórico
+function renderRangosHist(rutasHist) {
+  const RANGOS_LOC = [
+    { id:'verde',   cls:'verde',   label:'Disponibles', rango:'75–100%', color:'var(--verde)',
+      filtro: r => r.estado!=='LIBERADA' && r.pct >= 0.75 },
+    { id:'amarillo',cls:'amarillo',label:'Medio',        rango:'50–75%',  color:'var(--amarillo)',
+      filtro: r => r.estado!=='LIBERADA' && r.pct >= 0.50 && r.pct < 0.75 },
+    { id:'naranja', cls:'naranja', label:'Bajo',         rango:'25–50%',  color:'var(--naranja)',
+      filtro: r => r.estado!=='LIBERADA' && r.pct >= 0.25 && r.pct < 0.50 },
+    { id:'rojo',    cls:'rojo',    label:'Crítico',      rango:'0–25%',   color:'var(--rojo)',
+      filtro: r => r.estado!=='LIBERADA' && r.pct < 0.25 },
+  ];
+
+  const grid = document.getElementById('rangos-grid');
+  grid.innerHTML = RANGOS_LOC.map(rg => {
+    const rutas = rutasHist.filter(rg.filtro);
+    const totalDisp = rutas.reduce((s,r)=>s+r.disp,0);
+    const totalFib  = rutas.reduce((s,r)=>s+r.fibra,0);
+    const wasActivo = rangoActivo === rg.id;
+    return `
+      <div class="rango-card ${rg.cls}${wasActivo?' activo':''}" id="rango-${rg.id}"
+           onclick="toggleRangoHist('${rg.id}')">
+        <div class="rango-label" style="color:${rg.color}">${rg.label}</div>
+        <div class="rango-val"   style="color:${rg.color}">${rutas.length}</div>
+        <div class="rango-rango">${rg.rango}</div>
+        <div class="rango-sub">${totalDisp} disp. / ${totalFib} total</div>
+        <div class="rango-chevron">›</div>
+      </div>
+    `;
+  }).join('');
+
+  // Si había un panel abierto, refrescarlo con datos históricos
+  if (rangoActivo) {
+    const rg = RANGOS_LOC.find(r=>r.id===rangoActivo);
+    const rutas = rutasHist.filter(rg.filtro);
+    renderPanelRutas(rg, rutas);
+  }
+}
+
+function toggleRangoHist(id) {
+  // Buscar las rutas según el mes activo
+  const RANGOS_LOC = [
+    { id:'verde',   cls:'verde',   label:'Disponibles', rango:'75–100%', color:'var(--verde)',   filtro: r => r.estado!=='LIBERADA' && r.pct >= 0.75 },
+    { id:'amarillo',cls:'amarillo',label:'Medio',        rango:'50–75%',  color:'var(--amarillo)',filtro: r => r.estado!=='LIBERADA' && r.pct >= 0.50 && r.pct < 0.75 },
+    { id:'naranja', cls:'naranja', label:'Bajo',         rango:'25–50%',  color:'var(--naranja)', filtro: r => r.estado!=='LIBERADA' && r.pct >= 0.25 && r.pct < 0.50 },
+    { id:'rojo',    cls:'rojo',    label:'Crítico',      rango:'0–25%',   color:'var(--rojo)',    filtro: r => r.estado!=='LIBERADA' && r.pct < 0.25 },
+  ];
+  const rg = RANGOS_LOC.find(r=>r.id===id);
+  const rutasHist = rutasParaMes(mesHistActivo);
+  const panel = document.getElementById('panel-rutas');
+
+  if (rangoActivo === id) {
+    rangoActivo = null;
+    panel.classList.remove('abierto');
+    document.getElementById('rango-'+id).classList.remove('activo');
+    return;
+  }
+  if (rangoActivo) document.getElementById('rango-'+rangoActivo).classList.remove('activo');
+  rangoActivo = id;
+  document.getElementById('rango-'+id).classList.add('activo');
+  renderPanelRutas(rg, rutasHist.filter(rg.filtro));
+  panel.classList.remove('abierto');
+  requestAnimationFrame(()=>{ panel.classList.add('abierto'); });
+  setTimeout(()=>{ panel.scrollIntoView({behavior:'smooth', block:'nearest'}); }, 50);
+}
+
+function renderPanelRutas(rg, rutas) {
+  document.getElementById('panel-titulo').textContent =
+    `${rg.label} (${rg.rango}) — ${rutas.length} rutas`;
+  document.getElementById('panel-grid').innerHTML = rutas.map(r => {
+    const cls = colorClass(r.pct, r.estado);
+    const col = colorHex(r.pct, r.estado);
+    const pct = Math.round(r.pct*100);
+    return `
+      <div class="panel-item ${cls}" onclick='abrirModal(${JSON.stringify(r).replace(/'/g,"&#39;")})'>
+        <div class="pi-nombre">${r.n}</div>
+        <div class="pi-nodos">${r.inicio} → ${r.fin}</div>
+        <div class="pi-bar-wrap">
+          <div class="pi-bar" style="width:${pct}%;background:${col}"></div>
+        </div>
+        <div class="pi-nums">
+          <div class="pi-pct" style="color:${col}">${pct}%</div>
+          <div class="pi-det">${r.disp} disp<br>${r.fibra} total</div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+// Actualizar colores del mapa SVG según datos históricos
+function actualizarMapaColor(rutasHist) {
+  const svg = document.getElementById('mapa-svg');
+  const lineas = svg.querySelectorAll('line[data-idx]');
+  const colorMap = {verde:'#22c55e',amarillo:'#f59e0b',naranja:'#f97316',rojo:'#ef4444',liberada:'#38bdf8'};
+  lineas.forEach(line => {
+    const idx = parseInt(line.dataset.idx);
+    const r = rutasHist[idx];
+    if (!r) return;
+    const col = colorMap[colorClass(r.pct, r.estado)];
+    line.setAttribute('stroke', col);
+    // Actualizar también el glow (elemento anterior)
+    const prev = line.previousElementSibling;
+    if (prev && prev.tagName === 'line') prev.setAttribute('stroke', col);
+  });
+}
+
+// ─── RELOJ ────────────────────────────────────────────────────────────────────
+function tick() {
+  const now = new Date();
+  document.getElementById('reloj').textContent =
+    now.toLocaleDateString('es-EC',{day:'2-digit',month:'short',year:'numeric'}) + ' ' +
+    now.toLocaleTimeString('es-EC',{hour:'2-digit',minute:'2-digit'});
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+// Alias para que los onclick del HTML original sigan funcionando
+function toggleRango(id) { toggleRangoHist(id); }
+
+buildKPIs();
+buildMap();
+renderRangosHist(RUTAS);
+buildHistSelector();
+tick();
+setInterval(tick, 30000);
+</script>
 </body>
 </html>
